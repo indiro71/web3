@@ -1,14 +1,23 @@
+import type { BybitMarketPositionSide } from '../../api/pairs';
 import type { Pair } from '../../types/pair';
-import { EmptyState, PairsTableElement, TableScroll, TableSurface } from './PairsDashboard.style';
+import {
+  EmptyState,
+  HeaderFull,
+  HeaderShort,
+  PairsTableElement,
+  TableScroll,
+  TableSurface,
+} from './PairsDashboard.style';
 import { PairRow } from './PairRow';
 
 interface PairsTableProps {
   loading: boolean;
+  onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pairs: Pair[];
   totalPairs: number;
 }
 
-export function PairsTable({ loading, pairs, totalPairs }: PairsTableProps) {
+export function PairsTable({ loading, onBuySignalClick, pairs, totalPairs }: PairsTableProps) {
   return (
     <TableSurface>
       <TableScroll>
@@ -16,16 +25,28 @@ export function PairsTable({ loading, pairs, totalPairs }: PairsTableProps) {
           <thead>
             <tr>
               <th>Name</th>
-              <th>L/S Percent</th>
-              <th>L/S Next</th>
+              <th>
+                <HeaderFull>L/S Percent</HeaderFull>
+                <HeaderShort>L/S %</HeaderShort>
+              </th>
+              <th>
+                <HeaderFull>L/S Next</HeaderFull>
+                <HeaderShort>Next</HeaderShort>
+              </th>
               <th>Price</th>
-              <th>L/S Liquidation</th>
-              <th>L/S Margin</th>
+              <th>
+                <HeaderFull>L/S Liquidation</HeaderFull>
+                <HeaderShort>Liq</HeaderShort>
+              </th>
+              <th>
+                <HeaderFull>L/S Margin</HeaderFull>
+                <HeaderShort>Margin</HeaderShort>
+              </th>
             </tr>
           </thead>
           <tbody>
             {pairs.map((pair) => (
-              <PairRow key={pair._id} pair={pair} />
+              <PairRow key={pair._id} onBuySignalClick={onBuySignalClick} pair={pair} />
             ))}
           </tbody>
         </PairsTableElement>

@@ -16,6 +16,10 @@ export const Page = styled.main`
   @media (max-width: 860px) {
     padding: 10px;
   }
+
+  @media (max-width: 560px) {
+    padding: 6px;
+  }
 `;
 
 export const TopBar = styled.section`
@@ -28,6 +32,11 @@ export const TopBar = styled.section`
 
   @media (max-width: 980px) {
     grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 6px;
   }
 `;
 
@@ -46,6 +55,12 @@ export const SearchInput = styled.input`
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
+
+  @media (max-width: 860px) {
+    height: 32px;
+    padding: 0 9px;
+    font-size: 0.82rem;
+  }
 `;
 
 export const FilterGroup = styled.div`
@@ -57,7 +72,9 @@ export const FilterGroup = styled.div`
   overflow: hidden;
 
   @media (max-width: 860px) {
-    width: 100%;
+    width: auto;
+    justify-self: end;
+    border-radius: 7px;
   }
 `;
 
@@ -76,7 +93,30 @@ export const FilterButton = styled.button<{ $active: boolean }>`
   }
 
   @media (max-width: 860px) {
-    flex: 1;
+    min-width: 34px;
+    height: 32px;
+    padding: 0 9px;
+    font-size: 0.78rem;
+  }
+
+  @media (max-width: 560px) {
+    min-width: 31px;
+    padding: 0 7px;
+    font-size: 0.72rem;
+  }
+`;
+
+export const FilterLabelFull = styled.span`
+  @media (max-width: 860px) {
+    display: none;
+  }
+`;
+
+export const FilterLabelShort = styled.span`
+  display: none;
+
+  @media (max-width: 860px) {
+    display: inline;
   }
 `;
 
@@ -95,8 +135,7 @@ export const Counter = styled.div`
   font-weight: 800;
 
   @media (max-width: 860px) {
-    justify-self: stretch;
-    width: 100%;
+    display: none;
   }
 `;
 
@@ -110,6 +149,14 @@ export const StatusStrip = styled.div`
   @media (max-width: 980px) {
     justify-content: start;
     flex-wrap: wrap;
+  }
+
+  @media (max-width: 860px) {
+    width: 100%;
+    grid-column: 1 / -1;
+    justify-content: start;
+    flex-wrap: nowrap;
+    gap: 5px;
   }
 `;
 
@@ -134,6 +181,26 @@ export const StatusBadge = styled.div<{ $status: string }>`
     background: ${({ $status }) =>
       $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
   }
+
+  @media (max-width: 860px) {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+
+    span {
+      width: 9px;
+      height: 9px;
+    }
+  }
+`;
+
+export const StatusLabel = styled.span`
+  @media (max-width: 860px) {
+    display: none;
+  }
 `;
 
 export const StatusMeta = styled.div`
@@ -147,6 +214,29 @@ export const StatusMeta = styled.div`
   color: #5f6b7a;
   font-size: 0.78rem;
   font-weight: 700;
+
+  @media (max-width: 860px) {
+    flex: 1 1 auto;
+    min-width: 74px;
+    height: 28px;
+    justify-content: center;
+    padding: 0 7px;
+    font-size: 0.72rem;
+  }
+`;
+
+export const StatusMetaFull = styled.span`
+  @media (max-width: 860px) {
+    display: none;
+  }
+`;
+
+export const StatusMetaShort = styled.span`
+  display: none;
+
+  @media (max-width: 860px) {
+    display: inline;
+  }
 `;
 
 export const RefreshButton = styled.button`
@@ -163,6 +253,12 @@ export const RefreshButton = styled.button`
   &:disabled {
     cursor: wait;
     opacity: 0.58;
+  }
+
+  @media (max-width: 860px) {
+    height: 28px;
+    padding: 0 9px;
+    font-size: 0.72rem;
   }
 `;
 
@@ -181,6 +277,12 @@ export const LogoutButton = styled.button`
     color: #991b1b;
     border-color: #fecaca;
     background: #fff1f2;
+  }
+
+  @media (max-width: 860px) {
+    height: 28px;
+    padding: 0 9px;
+    font-size: 0.72rem;
   }
 `;
 
@@ -213,6 +315,8 @@ export const TableSurface = styled.section`
 
 export const TableScroll = styled.div`
   overflow: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 `;
 
 export const PairsTableElement = styled.table`
@@ -220,6 +324,7 @@ export const PairsTableElement = styled.table`
   min-width: 1040px;
   border-collapse: separate;
   border-spacing: 0;
+  font-variant-numeric: tabular-nums;
 
   th,
   td {
@@ -255,16 +360,62 @@ export const PairsTableElement = styled.table`
   tbody tr:last-child td {
     border-bottom: 0;
   }
+
+  @media (max-width: 860px) {
+    min-width: 720px;
+    font-size: 0.82rem;
+
+    th,
+    td {
+      padding: 9px 7px;
+    }
+
+    th {
+      font-size: 0.66rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    min-width: 650px;
+    font-size: 0.76rem;
+
+    th,
+    td {
+      padding: 7px 5px;
+    }
+
+    th {
+      font-size: 0.6rem;
+    }
+  }
 `;
 
 export const NameCell = styled.td`
   min-width: 220px;
+
+  @media (max-width: 860px) {
+    min-width: 118px;
+    width: 118px;
+  }
+
+  @media (max-width: 560px) {
+    min-width: 100px;
+    width: 100px;
+  }
 `;
 
 export const NameContent = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 860px) {
+    gap: 4px;
+  }
+
+  @media (max-width: 560px) {
+    gap: 3px;
+  }
 `;
 
 export const CryptoLogo = styled.img`
@@ -274,6 +425,10 @@ export const CryptoLogo = styled.img`
   border-radius: 50%;
   background: #eef2f7;
   object-fit: contain;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
 `;
 
 export const CryptoFallback = styled.span`
@@ -289,6 +444,10 @@ export const CryptoFallback = styled.span`
   color: #475569;
   font-size: 0.62rem;
   font-weight: 900;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
 `;
 
 export const ExchangeMark = styled.span`
@@ -303,6 +462,13 @@ export const ExchangeMark = styled.span`
   color: #2563eb;
   font-size: 0.74rem;
   font-weight: 900;
+
+  @media (max-width: 860px) {
+    width: 18px;
+    height: 18px;
+    flex-basis: 18px;
+    font-size: 0.62rem;
+  }
 `;
 
 export const PairLink = styled.a`
@@ -313,6 +479,18 @@ export const PairLink = styled.a`
   &:hover {
     text-decoration: underline;
   }
+
+  @media (max-width: 860px) {
+    display: inline-block;
+    max-width: 82px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+  }
+
+  @media (max-width: 560px) {
+    max-width: 72px;
+  }
 `;
 
 export const PairValues = styled.div`
@@ -320,6 +498,14 @@ export const PairValues = styled.div`
   align-items: center;
   gap: 8px;
   font-weight: 900;
+
+  @media (max-width: 860px) {
+    gap: 4px;
+  }
+
+  @media (max-width: 560px) {
+    gap: 3px;
+  }
 `;
 
 export const Divider = styled.span`
@@ -332,6 +518,41 @@ export const MetricValue = styled.span<{ $tone: string }>`
     if ($tone === 'negative') return '#ef4444';
     return '#64748b';
   }};
+`;
+
+export const NextSignalButton = styled.button<{ $tone: string }>`
+  min-width: 76px;
+  height: 30px;
+  border: 1px solid ${({ $tone }) => ($tone === 'positive' ? '#8ee6c4' : '#fecaca')};
+  border-radius: 7px;
+  background: ${({ $tone }) => ($tone === 'positive' ? '#ecfdf5' : '#fff1f2')};
+  color: ${({ $tone }) => ($tone === 'positive' ? '#059669' : '#ef4444')};
+  font: inherit;
+  font-weight: 900;
+  cursor: ${({ $tone }) => ($tone === 'positive' ? 'pointer' : 'default')};
+
+  &:hover {
+    ${({ $tone }) =>
+      $tone === 'positive'
+        ? `
+          border-color: #10b981;
+          background: #d1fae5;
+        `
+        : ''}
+  }
+
+  @media (max-width: 860px) {
+    min-width: 58px;
+    height: 24px;
+    padding: 0 4px;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 560px) {
+    min-width: 52px;
+    height: 22px;
+    padding: 0 3px;
+  }
 `;
 
 export const StrongValue = styled.span`
@@ -348,11 +569,143 @@ export const ExtraMargin = styled.span`
   margin-left: 3px;
   color: #64748b;
   font-size: 0.78rem;
+
+  @media (max-width: 860px) {
+    margin-left: 1px;
+    font-size: 0.68rem;
+  }
+`;
+
+export const HeaderFull = styled.span`
+  @media (max-width: 860px) {
+    display: none;
+  }
+`;
+
+export const HeaderShort = styled.span`
+  display: none;
+
+  @media (max-width: 860px) {
+    display: inline;
+  }
 `;
 
 export const EmptyState = styled.div`
   padding: 44px 20px;
   color: #64748b;
   text-align: center;
+  font-weight: 800;
+`;
+
+export const ModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.52);
+`;
+
+export const ModalDialog = styled.form`
+  width: min(100%, 440px);
+  border: 1px solid #d8e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  padding: 20px;
+`;
+
+export const ModalTitle = styled.h2`
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 1.08rem;
+  line-height: 1.25;
+`;
+
+export const ModalText = styled.p`
+  margin: 0 0 16px;
+  color: #475569;
+  font-size: 0.94rem;
+  line-height: 1.5;
+`;
+
+export const AmountField = styled.label`
+  display: grid;
+  gap: 7px;
+  margin-bottom: 18px;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+`;
+
+export const AmountInput = styled.input`
+  width: 100%;
+  height: 38px;
+  border: 1px solid #d5dde6;
+  border-radius: 7px;
+  padding: 0 10px;
+  color: #111827;
+  font-size: 0.95rem;
+  outline: none;
+
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+`;
+
+export const ModalActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+export const SecondaryButton = styled.button`
+  height: 36px;
+  border: 1px solid #d5dde6;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #475569;
+  padding: 0 14px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+`;
+
+export const PrimaryButton = styled.button`
+  height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: #0f766e;
+  color: #ffffff;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+`;
+
+export const Toast = styled.div<{ $tone: 'success' | 'error' }>`
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  max-width: min(420px, calc(100vw - 36px));
+  border: 1px solid ${({ $tone }) => ($tone === 'success' ? '#99f6e4' : '#fecaca')};
+  border-radius: 8px;
+  background: ${({ $tone }) => ($tone === 'success' ? '#f0fdfa' : '#fff1f2')};
+  color: ${({ $tone }) => ($tone === 'success' ? '#0f766e' : '#991b1b')};
+  padding: 12px 14px;
+  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.16);
+  font-size: 0.9rem;
   font-weight: 800;
 `;

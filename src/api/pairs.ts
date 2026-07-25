@@ -31,6 +31,28 @@ export const SOCKET_IO_PATH = normalizePath(
 export const PAIRS_SOCKET_URL = `${SOCKET_BASE_URL}${PAIRS_SOCKET_NAMESPACE}`;
 export const PAIRS_UPDATED_EVENT = 'pairs:update';
 
+export type BybitMarketPositionSide = 'long' | 'short';
+
+interface OpenBybitMarketPositionParams {
+  amount: number;
+  pairId: string;
+  side: BybitMarketPositionSide;
+  token: string;
+}
+
+export interface OpenBybitMarketPositionResult {
+  amount: number;
+  leverage: number;
+  name: string;
+  orderValue: number;
+  pairId: string;
+  price: number;
+  qty: string;
+  side: BybitMarketPositionSide;
+  success: boolean;
+  symbol: string;
+}
+
 export class UnauthorizedError extends Error {
   constructor(message = 'User not authorized') {
     super(message);
@@ -67,6 +89,36 @@ export async function fetchPairs(token: string): Promise<Pair[]> {
   }
 
   return sortPairs(data);
+}
+
+export async function openBybitMarketPosition({
+  amount,
+  pairId,
+  side,
+  token,
+}: OpenBybitMarketPositionParams): Promise<OpenBybitMarketPositionResult> {
+  const response = await fetch(`${API_BASE_URL}/scanprices/pairs/${pairId}/bybit/market-position`, {
+    body: JSON.stringify({
+      amount,
+      side,
+    }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+  const data = await readResponseBody(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError(data?.message);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || 'Failed to open Bybit market position');
+  }
+
+  return data;
 }
 
 export function mergePairUpdates(currentPairs: Pair[], updatedPairs: Pair[]): Pair[] {

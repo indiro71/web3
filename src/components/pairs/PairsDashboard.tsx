@@ -1,6 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  openBybitMarketPosition,
+  UnauthorizedError,
+  type BybitMarketPositionSide,
+} from '../../api/pairs';
 import { usePairs } from '../../hooks/usePairs';
-import { GlobalStyle, Notice, Page } from './PairsDashboard.style';
+import type { Pair } from '../../types/pair';
+import { GlobalStyle, Notice, Page, Toast } from './PairsDashboard.style';
+import { BuyPositionModal } from './BuyPositionModal';
 import { PairsTable } from './PairsTable';
 import { PairsToolbar } from './PairsToolbar';
 import {
@@ -16,6 +23,16 @@ interface PairsDashboardProps {
   onLogout: () => void;
 }
 
+interface BuyPositionRequest {
+  pair: Pair;
+  side: BybitMarketPositionSide;
+}
+
+interface DashboardToast {
+  message: string;
+  tone: 'success' | 'error';
+}
+
 export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs({
     token: authToken,
@@ -27,10 +44,24 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
     onlyNext: readStoredFilter('onlyNext'),
   });
   const [searchValue, setSearchValue] = useState('');
+  const [buyPositionRequest, setBuyPositionRequest] = useState<BuyPositionRequest | null>(null);
+  const [buyAmount, setBuyAmount] = useState(5);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [toast, setToast] = useState<DashboardToast | null>(null);
 
   const visiblePairs = useMemo(() => {
     return filterPairs(pairs, filters, searchValue);
   }, [filters, pairs, searchValue]);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setToast(null), 4200);
+
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const toggleFilter = (key: StoredFilterKey) => {
     setFilters((previousFilters) => {
@@ -43,6 +74,51 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
 
       return nextFilters;
     });
+  };
+
+  const handleBuySignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
+    setBuyAmount(5);
+    setBuyPositionRequest({ pair, side });
+  };
+
+  const handleBuyAmountChange = (amount: number) => {
+    setBuyAmount(Math.min(Math.max(amount || 0, 0), 5));
+  };
+
+  const handleBuyPosition = async () => {
+    if (!buyPositionRequest) {
+      return;
+    }
+
+    setBuyLoading(true);
+
+    try {
+      const result = await openBybitMarketPosition({
+        amount: buyAmount,
+        pairId: buyPositionRequest.pair._id,
+        side: buyPositionRequest.side,
+        token: authToken,
+      });
+
+      setBuyPositionRequest(null);
+      setToast({
+        message: `Заявка ${result.side.toUpperCase()} для ${result.name} отправлена: ${result.amount} USDT -> ${result.orderValue} USDT`,
+        tone: 'success',
+      });
+      await reload();
+    } catch (requestError) {
+      if (requestError instanceof UnauthorizedError) {
+        onLogout();
+        return;
+      }
+
+      setToast({
+        message: requestError instanceof Error ? requestError.message : 'Не удалось открыть позицию',
+        tone: 'error',
+      });
+    } finally {
+      setBuyLoading(false);
+    }
   };
 
   return (
@@ -70,7 +146,26 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
           </Notice>
         )}
 
-        <PairsTable loading={loading} pairs={visiblePairs} totalPairs={pairs.length} />
+        <PairsTable
+          loading={loading}
+          onBuySignalClick={handleBuySignalClick}
+          pairs={visiblePairs}
+          totalPairs={pairs.length}
+        />
+
+        {buyPositionRequest && (
+          <BuyPositionModal
+            amount={buyAmount}
+            loading={buyLoading}
+            pair={buyPositionRequest.pair}
+            side={buyPositionRequest.side}
+            onAmountChange={handleBuyAmountChange}
+            onClose={() => setBuyPositionRequest(null)}
+            onConfirm={handleBuyPosition}
+          />
+        )}
+
+        {toast && <Toast $tone={toast.tone}>{toast.message}</Toast>}
       </Page>
     </>
   );
