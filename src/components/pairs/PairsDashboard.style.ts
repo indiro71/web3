@@ -322,7 +322,7 @@ export const PairsTableElement = styled.table`
   th,
   td {
     border-bottom: 1px solid #e5ebf0;
-    padding: 14px 16px;
+    padding: 8px 12px;
     text-align: left;
     white-space: nowrap;
   }
@@ -334,8 +334,21 @@ export const PairsTableElement = styled.table`
     background: #f8fafc;
     color: #7b8794;
     font-size: 0.76rem;
-    font-weight: 900;
+    font-weight: 600;
     text-transform: uppercase;
+  }
+
+  th:first-child {
+    left: 0;
+    z-index: 3;
+  }
+
+  td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: inherit;
+    box-shadow: 1px 0 0 #e5ebf0;
   }
 
   tbody tr {
@@ -356,11 +369,11 @@ export const PairsTableElement = styled.table`
 
   @media (max-width: 860px) {
     min-width: 720px;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
 
     th,
     td {
-      padding: 9px 7px;
+      padding: 6px 6px;
     }
 
     th {
@@ -370,11 +383,11 @@ export const PairsTableElement = styled.table`
 
   @media (max-width: 560px) {
     min-width: 650px;
-    font-size: 0.76rem;
+    font-size: 0.7rem;
 
     th,
     td {
-      padding: 7px 5px;
+      padding: 4px 4px;
     }
 
     th {
@@ -385,15 +398,16 @@ export const PairsTableElement = styled.table`
 
 export const NameCell = styled.td`
   min-width: 220px;
+  background: inherit;
 
   @media (max-width: 860px) {
-    min-width: 118px;
-    width: 118px;
+    min-width: 88px;
+    width: 88px;
   }
 
   @media (max-width: 560px) {
-    min-width: 100px;
-    width: 100px;
+    min-width: 78px;
+    width: 78px;
   }
 `;
 
@@ -457,16 +471,16 @@ export const ExchangeMark = styled.span`
   font-weight: 900;
 
   @media (max-width: 860px) {
-    width: 18px;
-    height: 18px;
-    flex-basis: 18px;
-    font-size: 0.62rem;
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+    font-size: 0.58rem;
   }
 `;
 
 export const PairLink = styled.a`
   color: #2563eb;
-  font-weight: 900;
+  font-weight: 500;
   text-decoration: none;
 
   &:hover {
@@ -475,14 +489,14 @@ export const PairLink = styled.a`
 
   @media (max-width: 860px) {
     display: inline-block;
-    max-width: 82px;
+    max-width: 62px;
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: bottom;
   }
 
   @media (max-width: 560px) {
-    max-width: 72px;
+    max-width: 55px;
   }
 `;
 
@@ -490,7 +504,7 @@ export const PairValues = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-weight: 900;
+  font-weight: 500;
 
   @media (max-width: 860px) {
     gap: 4px;
@@ -515,13 +529,13 @@ export const MetricValue = styled.span<{ $tone: string }>`
 
 export const NextSignalButton = styled.button<{ $tone: string }>`
   min-width: 76px;
-  height: 30px;
+  height: 26px;
   border: 1px solid ${({ $tone }) => ($tone === 'positive' ? '#8ee6c4' : '#fecaca')};
   border-radius: 7px;
   background: ${({ $tone }) => ($tone === 'positive' ? '#ecfdf5' : '#fff1f2')};
   color: ${({ $tone }) => ($tone === 'positive' ? '#059669' : '#ef4444')};
   font: inherit;
-  font-weight: 900;
+  font-weight: 500;
   cursor: ${({ $tone }) => ($tone === 'positive' ? 'pointer' : 'default')};
 
   &:hover {
@@ -536,26 +550,26 @@ export const NextSignalButton = styled.button<{ $tone: string }>`
 
   @media (max-width: 860px) {
     min-width: 58px;
-    height: 24px;
+    height: 22px;
     padding: 0 4px;
     border-radius: 6px;
   }
 
   @media (max-width: 560px) {
     min-width: 52px;
-    height: 22px;
+    height: 20px;
     padding: 0 3px;
   }
 `;
 
 export const StrongValue = styled.span`
   color: #1f2937;
-  font-weight: 900;
+  font-weight: 500;
 `;
 
 export const MarginValue = styled.span`
   color: #1f2937;
-  font-weight: 900;
+  font-weight: 500;
 `;
 
 export const ExtraMargin = styled.span`
