@@ -1,5 +1,6 @@
 declare module 'socket.io-client' {
   interface SocketOptions {
+    path?: string;
     reconnection?: boolean;
     timeout?: number;
     transports?: string[];

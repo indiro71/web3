@@ -1,7 +1,34 @@
 import type { Pair } from '../types/pair';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:7272';
+const localApiBaseUrl = 'http://localhost:7272';
+const productionApiBaseUrl = 'https://indiro.ru/api-v2';
+const defaultApiBaseUrl = import.meta.env.DEV ? localApiBaseUrl : productionApiBaseUrl;
+const defaultSocketPath = import.meta.env.DEV ? '/socket.io' : '/api-v2/socket.io';
+
+const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
+const normalizePath = (value: string) => {
+  const path = value.startsWith('/') ? value : `/${value}`;
+  return stripTrailingSlashes(path);
+};
+const getUrlOrigin = (value: string) => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value;
+  }
+};
+
+export const API_BASE_URL = stripTrailingSlashes(
+  import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl,
+);
 export const PAIRS_SOCKET_NAMESPACE = '/scanprices/pairs';
+export const SOCKET_BASE_URL = stripTrailingSlashes(
+  import.meta.env.VITE_SOCKET_BASE_URL || getUrlOrigin(API_BASE_URL),
+);
+export const SOCKET_IO_PATH = normalizePath(
+  import.meta.env.VITE_SOCKET_IO_PATH || defaultSocketPath,
+);
+export const PAIRS_SOCKET_URL = `${SOCKET_BASE_URL}${PAIRS_SOCKET_NAMESPACE}`;
 export const PAIRS_UPDATED_EVENT = 'pairs:update';
 
 const sortPairs = (pairs: Pair[]) => {
