@@ -8,6 +8,7 @@ import {
   RefreshButton,
   SearchInput,
   StatusBadge,
+  StatusDot,
   StatusLabel,
   StatusMeta,
   StatusMetaFull,
@@ -78,7 +79,7 @@ export function PairsToolbar({
       </Counter>
       <StatusStrip aria-label="Connection status">
         <StatusBadge $status={socketStatus}>
-          <span aria-hidden="true" />
+          <StatusDot $status={socketStatus} aria-hidden="true" />
           <StatusLabel>{socketStatus}</StatusLabel>
         </StatusBadge>
         <StatusMeta>
