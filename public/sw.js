@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web3-pwa-v2';
+const CACHE_NAME = 'web3-pwa-v3';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/pwa.svg'];
 const STATIC_PATHS = ['/assets/', '/manifest.webmanifest', '/pwa.svg'];
 const API_PATH_PREFIXES = ['/api/', '/api-v2/', '/socket.io/'];
@@ -56,7 +56,6 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (isApiRequest(url)) {
-    event.respondWith(fetch(request));
     return;
   }
 

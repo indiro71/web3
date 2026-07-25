@@ -55,12 +55,13 @@ export function usePairs({ onUnauthorized, token }: UsePairsOptions) {
         token,
       },
       reconnection: true,
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
     });
 
     const handleConnect = () => setSocketStatus('connected');
     const handleDisconnect = () => setSocketStatus('disconnected');
     const handleConnectError = () => setSocketStatus('error');
+    const handleAuthError = () => onUnauthorized();
     const handlePairsUpdate = (updatedPairs: Pair[]) => {
       setPairs((currentPairs) => mergePairUpdates(currentPairs, updatedPairs));
       setLastUpdated(new Date());
@@ -70,16 +71,18 @@ export function usePairs({ onUnauthorized, token }: UsePairsOptions) {
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
+    socket.on('auth:error', handleAuthError);
     socket.on(PAIRS_UPDATED_EVENT, handlePairsUpdate);
 
     return () => {
       socket.removeListener('connect', handleConnect);
       socket.removeListener('disconnect', handleDisconnect);
       socket.removeListener('connect_error', handleConnectError);
+      socket.removeListener('auth:error', handleAuthError);
       socket.removeListener(PAIRS_UPDATED_EVENT, handlePairsUpdate);
       socket.close();
     };
-  }, [token]);
+  }, [onUnauthorized, token]);
 
   return {
     pairs,
