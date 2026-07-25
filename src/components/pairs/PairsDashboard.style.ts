@@ -30,10 +30,6 @@ export const TopBar = styled.section`
   margin: 0 auto 8px;
   width: min(100%, 1720px);
 
-  @media (max-width: 980px) {
-    grid-template-columns: 1fr;
-  }
-
   @media (max-width: 860px) {
     grid-template-columns: minmax(0, 1fr) max-content;
     gap: 6px;
@@ -146,11 +142,6 @@ export const StatusStrip = styled.div`
   gap: 8px;
   min-width: 0;
 
-  @media (max-width: 980px) {
-    justify-content: start;
-    flex-wrap: wrap;
-  }
-
   @media (max-width: 860px) {
     width: 100%;
     grid-column: 1 / -1;
@@ -174,14 +165,6 @@ export const StatusBadge = styled.div<{ $status: string }>`
   font-weight: 800;
   text-transform: capitalize;
 
-  span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: ${({ $status }) =>
-      $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
-  }
-
   @media (max-width: 860px) {
     width: 28px;
     height: 28px;
@@ -189,11 +172,21 @@ export const StatusBadge = styled.div<{ $status: string }>`
     justify-content: center;
     gap: 0;
     padding: 0;
+  }
+`;
 
-    span {
-      width: 9px;
-      height: 9px;
-    }
+export const StatusDot = styled.span<{ $status: string }>`
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: ${({ $status }) =>
+    $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
+
+  @media (max-width: 860px) {
+    width: 9px;
+    height: 9px;
+    flex-basis: 9px;
   }
 `;
 
