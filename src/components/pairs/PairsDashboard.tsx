@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { usePairs } from '../hooks/usePairs';
+import { usePairs } from '../../hooks/usePairs';
 import { GlobalStyle, Notice, Page } from './PairsDashboard.style';
 import { PairsTable } from './PairsTable';
 import { PairsToolbar } from './PairsToolbar';
@@ -11,8 +11,16 @@ import {
   type StoredFilterKey,
 } from './PairsDashboard.utils';
 
-export function PairsDashboard() {
-  const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs();
+interface PairsDashboardProps {
+  authToken: string;
+  onLogout: () => void;
+}
+
+export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
+  const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs({
+    token: authToken,
+    onUnauthorized: onLogout,
+  });
   const [filters, setFilters] = useState<PairFilters>({
     allData: readStoredFilter('allData'),
     onlyPrice: readStoredFilter('onlyPrice'),
@@ -47,6 +55,7 @@ export function PairsDashboard() {
           lastUpdated={lastUpdated}
           onFilterToggle={toggleFilter}
           onRefresh={reload}
+          onLogout={onLogout}
           onSearchChange={setSearchValue}
           searchValue={searchValue}
           socketStatus={socketStatus}

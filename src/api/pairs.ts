@@ -31,13 +31,36 @@ export const SOCKET_IO_PATH = normalizePath(
 export const PAIRS_SOCKET_URL = `${SOCKET_BASE_URL}${PAIRS_SOCKET_NAMESPACE}`;
 export const PAIRS_UPDATED_EVENT = 'pairs:update';
 
+export class UnauthorizedError extends Error {
+  constructor(message = 'User not authorized') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
 const sortPairs = (pairs: Pair[]) => {
   return [...pairs].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 };
 
-export async function fetchPairs(): Promise<Pair[]> {
-  const response = await fetch(`${API_BASE_URL}/scanprices/pairs/`);
-  const data = await response.json();
+const readResponseBody = async (response: Response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+export async function fetchPairs(token: string): Promise<Pair[]> {
+  const response = await fetch(`${API_BASE_URL}/scanprices/pairs/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await readResponseBody(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError(data?.message);
+  }
 
   if (!response.ok) {
     throw new Error(data?.message || data?.error || 'Failed to load pairs');

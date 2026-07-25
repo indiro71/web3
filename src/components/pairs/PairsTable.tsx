@@ -1,4 +1,4 @@
-import type { Pair } from '../types/pair';
+import type { Pair } from '../../types/pair';
 import { EmptyState, PairsTableElement, TableScroll, TableSurface } from './PairsDashboard.style';
 import { PairRow } from './PairRow';
 

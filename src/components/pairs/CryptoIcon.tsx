@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Pair } from '../types/pair';
+import type { Pair } from '../../types/pair';
 import { CryptoFallback, CryptoLogo } from './PairsDashboard.style';
 import { getCryptoIconSources, getPairBaseAsset } from './PairsDashboard.utils';
 
