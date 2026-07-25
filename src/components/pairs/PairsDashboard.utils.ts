@@ -1,4 +1,4 @@
-import type { Pair } from '../types/pair';
+import type { Pair } from '../../types/pair';
 
 const cryptoIconBaseUrl =
   'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color';

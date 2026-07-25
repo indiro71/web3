@@ -166,6 +166,24 @@ export const RefreshButton = styled.button`
   }
 `;
 
+export const LogoutButton = styled.button`
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid #d7dee7;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    color: #991b1b;
+    border-color: #fecaca;
+    background: #fff1f2;
+  }
+`;
+
 export const Notice = styled.div`
   width: min(100%, 1720px);
   margin: 0 auto 14px;

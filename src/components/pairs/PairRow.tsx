@@ -1,4 +1,4 @@
-import type { Pair } from '../types/pair';
+import type { Pair } from '../../types/pair';
 import {
   Divider,
   ExchangeMark,

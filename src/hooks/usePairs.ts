@@ -6,12 +6,18 @@ import {
   PAIRS_SOCKET_URL,
   PAIRS_UPDATED_EVENT,
   SOCKET_IO_PATH,
+  UnauthorizedError,
 } from '../api/pairs';
 import type { Pair } from '../types/pair';
 
 type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
-export function usePairs() {
+interface UsePairsOptions {
+  onUnauthorized: () => void;
+  token: string;
+}
+
+export function usePairs({ onUnauthorized, token }: UsePairsOptions) {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,15 +29,20 @@ export function usePairs() {
     setError('');
 
     try {
-      const nextPairs = await fetchPairs();
+      const nextPairs = await fetchPairs(token);
       setPairs(nextPairs);
       setLastUpdated(new Date());
     } catch (requestError) {
+      if (requestError instanceof UnauthorizedError) {
+        onUnauthorized();
+        return;
+      }
+
       setError(requestError instanceof Error ? requestError.message : 'Failed to load pairs');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onUnauthorized, token]);
 
   useEffect(() => {
     loadPairs();
@@ -40,6 +51,9 @@ export function usePairs() {
   useEffect(() => {
     const socket = io(PAIRS_SOCKET_URL, {
       path: SOCKET_IO_PATH,
+      query: {
+        token,
+      },
       reconnection: true,
       transports: ['websocket', 'polling'],
     });
@@ -65,7 +79,7 @@ export function usePairs() {
       socket.removeListener(PAIRS_UPDATED_EVENT, handlePairsUpdate);
       socket.close();
     };
-  }, []);
+  }, [token]);
 
   return {
     pairs,

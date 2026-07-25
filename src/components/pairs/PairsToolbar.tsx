@@ -2,6 +2,7 @@ import {
   Counter,
   FilterButton,
   FilterGroup,
+  LogoutButton,
   RefreshButton,
   SearchInput,
   StatusBadge,
@@ -16,6 +17,7 @@ interface PairsToolbarProps {
   loading: boolean;
   lastUpdated: Date | null;
   onFilterToggle: (key: StoredFilterKey) => void;
+  onLogout: () => void;
   onRefresh: () => void;
   onSearchChange: (value: string) => void;
   searchValue: string;
@@ -35,6 +37,7 @@ export function PairsToolbar({
   loading,
   lastUpdated,
   onFilterToggle,
+  onLogout,
   onRefresh,
   onSearchChange,
   searchValue,
@@ -76,6 +79,9 @@ export function PairsToolbar({
         <RefreshButton type="button" onClick={onRefresh} disabled={loading}>
           Refresh
         </RefreshButton>
+        <LogoutButton type="button" onClick={onLogout}>
+          Logout
+        </LogoutButton>
       </StatusStrip>
     </TopBar>
   );
