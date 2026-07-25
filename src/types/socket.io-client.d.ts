@@ -3,6 +3,9 @@ declare module 'socket.io-client' {
     path?: string;
     query?: Record<string, string>;
     reconnection?: boolean;
+    reconnectionAttempts?: number;
+    reconnectionDelay?: number;
+    reconnectionDelayMax?: number;
     timeout?: number;
     transports?: string[];
   }
