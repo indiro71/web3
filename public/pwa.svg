@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Web3 PWA icon">
+  <rect width="512" height="512" rx="112" fill="#0f766e"/>
+  <path fill="#ccfbf1" d="M146 164h220c20 0 36 16 36 36v112c0 20-16 36-36 36H146c-20 0-36-16-36-36V200c0-20 16-36 36-36Z"/>
+  <path fill="#134e4a" d="M164 216h44l30 80 32-80h35l32 80 30-80h42l-52 128h-38l-32-78-32 78h-38L164 216Z"/>
+  <circle cx="168" cy="164" r="24" fill="#5eead4"/>
+  <circle cx="344" cy="348" r="24" fill="#5eead4"/>
+</svg>
