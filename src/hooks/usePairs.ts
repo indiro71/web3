@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import {
-  API_BASE_URL,
   fetchPairs,
   mergePairUpdates,
-  PAIRS_SOCKET_NAMESPACE,
+  PAIRS_SOCKET_URL,
   PAIRS_UPDATED_EVENT,
+  SOCKET_IO_PATH,
 } from '../api/pairs';
 import type { Pair } from '../types/pair';
 
@@ -38,7 +38,8 @@ export function usePairs() {
   }, [loadPairs]);
 
   useEffect(() => {
-    const socket = io(`${API_BASE_URL}${PAIRS_SOCKET_NAMESPACE}`, {
+    const socket = io(PAIRS_SOCKET_URL, {
+      path: SOCKET_IO_PATH,
       reconnection: true,
       transports: ['websocket', 'polling'],
     });
