@@ -4,6 +4,8 @@ const localApiBaseUrl = 'http://localhost:7272';
 const productionApiBaseUrl = 'https://indiro.ru/api-v2';
 const defaultApiBaseUrl = import.meta.env.DEV ? localApiBaseUrl : productionApiBaseUrl;
 const defaultSocketPath = import.meta.env.DEV ? '/socket.io' : '/api-v2/socket.io';
+const defaultRequestTimeoutMs = 10000;
+const defaultTradeRequestTimeoutMs = 15000;
 
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
 const normalizePath = (value: string) => {
@@ -72,8 +74,28 @@ const readResponseBody = async (response: Response) => {
   }
 };
 
+const request = async (url: string, options: RequestInit = {}, timeoutMs = defaultRequestTimeoutMs) => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+};
+
 export async function fetchPairs(token: string): Promise<Pair[]> {
-  const response = await fetch(`${API_BASE_URL}/scanprices/pairs/`, {
+  const response = await request(`${API_BASE_URL}/scanprices/pairs/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -97,17 +119,21 @@ export async function openBybitMarketPosition({
   side,
   token,
 }: OpenBybitMarketPositionParams): Promise<OpenBybitMarketPositionResult> {
-  const response = await fetch(`${API_BASE_URL}/scanprices/pairs/${pairId}/bybit/market-position`, {
-    body: JSON.stringify({
-      amount,
-      side,
-    }),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const response = await request(
+    `${API_BASE_URL}/scanprices/pairs/${pairId}/bybit/market-position`,
+    {
+      body: JSON.stringify({
+        amount,
+        side,
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
     },
-    method: 'POST',
-  });
+    defaultTradeRequestTimeoutMs,
+  );
   const data = await readResponseBody(response);
 
   if (response.status === 401) {
