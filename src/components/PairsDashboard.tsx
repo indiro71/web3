@@ -145,27 +145,7 @@ export function PairsDashboard() {
     <>
       <GlobalStyle />
       <Page>
-        <Header>
-          <TitleGroup>
-            <Eyebrow>Trading monitor</Eyebrow>
-            <h1>Pairs</h1>
-          </TitleGroup>
-
-          <StatusStrip aria-label="Connection status">
-            <StatusBadge $status={socketStatus}>
-              <span aria-hidden="true" />
-              {socketStatus}
-            </StatusBadge>
-            <StatusMeta>
-              {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'No updates yet'}
-            </StatusMeta>
-            <RefreshButton type="button" onClick={reload} disabled={loading}>
-              Refresh
-            </RefreshButton>
-          </StatusStrip>
-        </Header>
-
-        <Toolbar aria-label="Pair filters">
+        <TopBar aria-label="Pair filters">
           <SearchInput
             type="search"
             value={searchValue}
@@ -198,7 +178,19 @@ export function PairsDashboard() {
           <Counter>
             {visiblePairs.length} / {pairs.length}
           </Counter>
-        </Toolbar>
+          <StatusStrip aria-label="Connection status">
+            <StatusBadge $status={socketStatus}>
+              <span aria-hidden="true" />
+              {socketStatus}
+            </StatusBadge>
+            <StatusMeta>
+              {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'No updates yet'}
+            </StatusMeta>
+            <RefreshButton type="button" onClick={reload} disabled={loading}>
+              Refresh
+            </RefreshButton>
+          </StatusStrip>
+        </TopBar>
 
         {error && (
           <Notice role="alert">
@@ -324,129 +316,38 @@ const GlobalStyle = createGlobalStyle`
 
 const Page = styled.main`
   min-height: 100vh;
-  padding: 28px;
+  padding: 10px 14px 18px;
   background:
     linear-gradient(180deg, #f7f9fb 0%, #edf2f6 46%, #e8eef2 100%);
 
   @media (max-width: 860px) {
-    padding: 18px;
+    padding: 10px;
   }
 `;
 
-const Header = styled.header`
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin: 0 auto 22px;
-  width: min(100%, 1720px);
-
-  @media (max-width: 860px) {
-    align-items: start;
-    flex-direction: column;
-  }
-`;
-
-const TitleGroup = styled.div`
-  h1 {
-    margin: 0;
-    color: #111827;
-    font-size: 2.4rem;
-    line-height: 1;
-  }
-`;
-
-const Eyebrow = styled.p`
-  margin: 0 0 8px;
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-`;
-
-const StatusStrip = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: end;
-  gap: 10px;
-  flex-wrap: wrap;
-`;
-
-const StatusBadge = styled.div<{ $status: string }>`
-  display: inline-flex;
+const TopBar = styled.section`
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) auto minmax(68px, max-content) minmax(360px, 1fr);
   align-items: center;
   gap: 8px;
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid #d7dee7;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #374151;
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-transform: capitalize;
-
-  span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: ${({ $status }) =>
-      $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
-  }
-`;
-
-const StatusMeta = styled.div`
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  border: 1px solid #d7dee7;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #5f6b7a;
-  font-size: 0.82rem;
-  font-weight: 700;
-`;
-
-const RefreshButton = styled.button`
-  height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 7px;
-  background: #1f2937;
-  color: #ffffff;
-  font-weight: 800;
-  cursor: pointer;
-
-  &:disabled {
-    cursor: wait;
-    opacity: 0.58;
-  }
-`;
-
-const Toolbar = styled.section`
-  display: grid;
-  grid-template-columns: minmax(220px, 360px) auto minmax(80px, max-content);
-  align-items: center;
-  gap: 12px;
-  margin: 0 auto 14px;
+  margin: 0 auto 8px;
   width: min(100%, 1720px);
 
-  @media (max-width: 860px) {
+  @media (max-width: 980px) {
     grid-template-columns: 1fr;
   }
 `;
 
 const SearchInput = styled.input`
   width: 100%;
-  height: 40px;
+  height: 34px;
   border: 1px solid #d5dde6;
   border-radius: 7px;
   background: #ffffff;
   color: #111827;
-  padding: 0 12px;
+  padding: 0 10px;
   outline: none;
+  font-size: 0.9rem;
 
   &:focus {
     border-color: #2563eb;
@@ -468,8 +369,8 @@ const FilterGroup = styled.div`
 `;
 
 const FilterButton = styled.button<{ $active: boolean }>`
-  min-width: 72px;
-  height: 38px;
+  min-width: 64px;
+  height: 32px;
   border: 0;
   border-right: 1px solid #d5dde6;
   background: ${({ $active }) => ($active ? '#2563eb' : '#ffffff')};
@@ -488,8 +389,8 @@ const FilterButton = styled.button<{ $active: boolean }>`
 
 const Counter = styled.div`
   justify-self: end;
-  min-width: 80px;
-  height: 38px;
+  min-width: 68px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -497,11 +398,78 @@ const Counter = styled.div`
   border-radius: 7px;
   background: #ffffff;
   color: #475569;
+  font-size: 0.9rem;
   font-weight: 800;
 
   @media (max-width: 860px) {
     justify-self: stretch;
     width: 100%;
+  }
+`;
+
+const StatusStrip = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 8px;
+  min-width: 0;
+
+  @media (max-width: 980px) {
+    justify-content: start;
+    flex-wrap: wrap;
+  }
+`;
+
+const StatusBadge = styled.div<{ $status: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #d7dee7;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: capitalize;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: ${({ $status }) =>
+      $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
+  }
+`;
+
+const StatusMeta = styled.div`
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  border: 1px solid #d7dee7;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #5f6b7a;
+  font-size: 0.78rem;
+  font-weight: 700;
+`;
+
+const RefreshButton = styled.button`
+  height: 32px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 7px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.58;
   }
 `;
 
