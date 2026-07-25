@@ -1,3 +1,4 @@
+import type { BybitMarketPositionSide } from '../../api/pairs';
 import type { Pair } from '../../types/pair';
 import {
   Divider,
@@ -7,6 +8,7 @@ import {
   MetricValue,
   NameCell,
   NameContent,
+  NextSignalButton,
   PairLink,
   PairValues,
   StrongValue,
@@ -24,14 +26,17 @@ import {
 import { CryptoIcon } from './CryptoIcon';
 
 interface PairRowProps {
+  onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pair: Pair;
 }
 
-export function PairRow({ pair }: PairRowProps) {
+export function PairRow({ onBuySignalClick, pair }: PairRowProps) {
   const longMargin = formatMargin(pair.longMargin, pair.longAllMargin);
   const shortMargin = formatMargin(pair.shortMargin, pair.shortAllMargin);
   const longNextSignal = hasNextLongSignal(pair);
   const shortNextSignal = hasNextShortSignal(pair);
+  const canBuyLong = pair.exchange === 'BYBIT' && longNextSignal;
+  const canBuyShort = pair.exchange === 'BYBIT' && shortNextSignal;
 
   return (
     <tr>
@@ -57,13 +62,33 @@ export function PairRow({ pair }: PairRowProps) {
       </td>
       <td>
         <PairValues>
-          <MetricValue $tone={longNextSignal ? 'positive' : 'negative'}>
-            {formatDecimal(pair.nextBuyLongPrice)}
-          </MetricValue>
+          {canBuyLong ? (
+            <NextSignalButton
+              $tone="positive"
+              type="button"
+              onClick={() => onBuySignalClick(pair, 'long')}
+            >
+              {formatDecimal(pair.nextBuyLongPrice)}
+            </NextSignalButton>
+          ) : (
+            <MetricValue $tone={longNextSignal ? 'positive' : 'negative'}>
+              {formatDecimal(pair.nextBuyLongPrice)}
+            </MetricValue>
+          )}
           <Divider>|</Divider>
-          <MetricValue $tone={shortNextSignal ? 'positive' : 'negative'}>
-            {formatDecimal(pair.nextBuyShortPrice)}
-          </MetricValue>
+          {canBuyShort ? (
+            <NextSignalButton
+              $tone="positive"
+              type="button"
+              onClick={() => onBuySignalClick(pair, 'short')}
+            >
+              {formatDecimal(pair.nextBuyShortPrice)}
+            </NextSignalButton>
+          ) : (
+            <MetricValue $tone={shortNextSignal ? 'positive' : 'negative'}>
+              {formatDecimal(pair.nextBuyShortPrice)}
+            </MetricValue>
+          )}
         </PairValues>
       </td>
       <td>

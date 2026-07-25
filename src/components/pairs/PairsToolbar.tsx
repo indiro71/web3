@@ -2,11 +2,16 @@ import {
   Counter,
   FilterButton,
   FilterGroup,
+  FilterLabelFull,
+  FilterLabelShort,
   LogoutButton,
   RefreshButton,
   SearchInput,
   StatusBadge,
+  StatusLabel,
   StatusMeta,
+  StatusMetaFull,
+  StatusMetaShort,
   StatusStrip,
   TopBar,
 } from './PairsDashboard.style';
@@ -26,10 +31,10 @@ interface PairsToolbarProps {
   visibleCount: number;
 }
 
-const filterItems: Array<{ key: StoredFilterKey; label: string }> = [
-  { key: 'allData', label: 'Risk' },
-  { key: 'onlyPrice', label: 'Price' },
-  { key: 'onlyNext', label: 'Next' },
+const filterItems: Array<{ key: StoredFilterKey; label: string; shortLabel: string }> = [
+  { key: 'allData', label: 'Risk', shortLabel: 'R' },
+  { key: 'onlyPrice', label: 'Price', shortLabel: 'P' },
+  { key: 'onlyNext', label: 'Next', shortLabel: 'N' },
 ];
 
 export function PairsToolbar({
@@ -45,6 +50,8 @@ export function PairsToolbar({
   totalCount,
   visibleCount,
 }: PairsToolbarProps) {
+  const updatedTime = lastUpdated?.toLocaleTimeString() ?? null;
+
   return (
     <TopBar aria-label="Pair filters">
       <SearchInput
@@ -61,7 +68,8 @@ export function PairsToolbar({
             $active={filters[filterItem.key]}
             onClick={() => onFilterToggle(filterItem.key)}
           >
-            {filterItem.label}
+            <FilterLabelFull>{filterItem.label}</FilterLabelFull>
+            <FilterLabelShort>{filterItem.shortLabel}</FilterLabelShort>
           </FilterButton>
         ))}
       </FilterGroup>
@@ -71,10 +79,11 @@ export function PairsToolbar({
       <StatusStrip aria-label="Connection status">
         <StatusBadge $status={socketStatus}>
           <span aria-hidden="true" />
-          {socketStatus}
+          <StatusLabel>{socketStatus}</StatusLabel>
         </StatusBadge>
         <StatusMeta>
-          {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'No updates yet'}
+          <StatusMetaFull>{updatedTime ? `Updated ${updatedTime}` : 'No updates yet'}</StatusMetaFull>
+          <StatusMetaShort>{updatedTime ?? 'No data'}</StatusMetaShort>
         </StatusMeta>
         <RefreshButton type="button" onClick={onRefresh} disabled={loading}>
           Refresh
