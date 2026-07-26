@@ -14,8 +14,10 @@ import {
   StatusMetaFull,
   StatusMetaShort,
   StatusStrip,
+  ThemeToggleButton,
   TopBar,
 } from './PairsDashboard.style';
+import type { AppThemeMode } from './PairsDashboard.theme';
 import type { PairFilters, StoredFilterKey } from './PairsDashboard.utils';
 
 interface PairsToolbarProps {
@@ -26,8 +28,10 @@ interface PairsToolbarProps {
   onLogout: () => void;
   onRefresh: () => void;
   onSearchChange: (value: string) => void;
+  onThemeToggle: () => void;
   searchValue: string;
   socketStatus: string;
+  themeMode: AppThemeMode;
   totalCount: number;
   visibleCount: number;
 }
@@ -46,8 +50,10 @@ export function PairsToolbar({
   onLogout,
   onRefresh,
   onSearchChange,
+  onThemeToggle,
   searchValue,
   socketStatus,
+  themeMode,
   totalCount,
   visibleCount,
 }: PairsToolbarProps) {
@@ -86,12 +92,20 @@ export function PairsToolbar({
           <StatusMetaFull>{updatedTime ? `Updated ${updatedTime}` : 'No updates yet'}</StatusMetaFull>
           <StatusMetaShort>{updatedTime ?? 'No data'}</StatusMetaShort>
         </StatusMeta>
-        <RefreshButton type="button" onClick={onRefresh} disabled={loading}>
-          Refresh
-        </RefreshButton>
         <LogoutButton type="button" onClick={onLogout}>
           Logout
         </LogoutButton>
+        <ThemeToggleButton
+          type="button"
+          aria-label={themeMode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          title={themeMode === 'dark' ? 'Light theme' : 'Dark theme'}
+          onClick={onThemeToggle}
+        >
+          {themeMode === 'dark' ? '☀' : '☾'}
+        </ThemeToggleButton>
+        <RefreshButton type="button" onClick={onRefresh} disabled={loading}>
+          Refresh
+        </RefreshButton>
       </StatusStrip>
     </TopBar>
   );

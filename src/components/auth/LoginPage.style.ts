@@ -2,8 +2,9 @@ import styled, { createGlobalStyle } from 'styled-components';
 
 export const LoginGlobalStyle = createGlobalStyle`
   body {
-    background: #eef2f5;
-    color: #18202a;
+    background: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.primaryText};
+    color-scheme: ${({ theme }) => theme.mode};
   }
 `;
 
@@ -12,23 +13,23 @@ export const LoginPageShell = styled.main`
   display: grid;
   place-items: center;
   padding: 18px;
-  background: linear-gradient(180deg, #f7f9fb 0%, #edf2f6 100%);
+  background: ${({ theme }) => theme.colors.pageGradient};
 `;
 
 export const LoginPanel = styled.form`
   width: min(100%, 390px);
   display: grid;
   gap: 14px;
-  border: 1px solid #d9e1e8;
+  border: 1px solid ${({ theme }) => theme.colors.tableBorder};
   border-radius: 8px;
-  background: #ffffff;
+  background: ${({ theme }) => theme.colors.surface};
   padding: 22px;
-  box-shadow: 0 18px 50px rgba(30, 41, 59, 0.1);
+  box-shadow: ${({ theme }) => theme.colors.elevatedShadow};
 `;
 
 export const LoginTitle = styled.h1`
   margin: 0 0 4px;
-  color: #111827;
+  color: ${({ theme }) => theme.colors.primaryText};
   font-size: 1.35rem;
   line-height: 1.2;
 `;
@@ -36,24 +37,28 @@ export const LoginTitle = styled.h1`
 export const FieldGroup = styled.label`
   display: grid;
   gap: 7px;
-  color: #334155;
+  color: ${({ theme }) => theme.colors.secondaryText};
   font-size: 0.84rem;
   font-weight: 800;
 `;
 
 export const LoginInput = styled.input`
   height: 40px;
-  border: 1px solid #d5dde6;
+  border: 1px solid ${({ theme }) => theme.colors.tableBorder};
   border-radius: 7px;
-  background: #ffffff;
-  color: #111827;
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.primaryText};
   padding: 0 11px;
   outline: none;
   font-size: 0.95rem;
 
   &:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    border-color: ${({ theme }) => theme.colors.activeBorder};
+    box-shadow: ${({ theme }) => theme.colors.focusShadow};
+  }
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.mutedText};
   }
 `;
 
@@ -61,8 +66,8 @@ export const LoginButton = styled.button`
   height: 40px;
   border: 0;
   border-radius: 7px;
-  background: #1f2937;
-  color: #ffffff;
+  background: ${({ theme }) => theme.colors.buttonDarkBackground};
+  color: ${({ theme }) => theme.colors.buttonDarkText};
   font-weight: 900;
   cursor: pointer;
 
@@ -73,10 +78,10 @@ export const LoginButton = styled.button`
 `;
 
 export const LoginError = styled.div`
-  border: 1px solid #fecaca;
+  border: 1px solid ${({ theme }) => theme.colors.dangerBorder};
   border-radius: 7px;
-  background: #fff1f2;
-  color: #991b1b;
+  background: ${({ theme }) => theme.colors.dangerBackground};
+  color: ${({ theme }) => theme.colors.dangerText};
   padding: 10px 11px;
   font-size: 0.86rem;
   font-weight: 800;

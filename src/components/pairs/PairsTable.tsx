@@ -11,6 +11,11 @@ import {
 import { PairRow } from './PairRow';
 
 interface PairsTableProps {
+  isTradeButtonCoolingDown: (
+    pairId: string,
+    action: 'buy' | 'reopen',
+    side: BybitMarketPositionSide,
+  ) => boolean;
   loading: boolean;
   onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
@@ -19,6 +24,7 @@ interface PairsTableProps {
 }
 
 export function PairsTable({
+  isTradeButtonCoolingDown,
   loading,
   onBuySignalClick,
   onReopenSignalClick,
@@ -55,6 +61,7 @@ export function PairsTable({
             {pairs.map((pair) => (
               <PairRow
                 key={pair._id}
+                isTradeButtonCoolingDown={isTradeButtonCoolingDown}
                 onBuySignalClick={onBuySignalClick}
                 onReopenSignalClick={onReopenSignalClick}
                 pair={pair}
