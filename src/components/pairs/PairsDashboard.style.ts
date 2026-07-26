@@ -647,20 +647,26 @@ export const AmountField = styled.div`
   font-weight: 800;
 `;
 
-export const AmountOptions = styled.div`
+export const AmountOptions = styled.div<{ $dense?: boolean }>`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: ${({ $dense }) =>
+    $dense ? 'repeat(4, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))'};
   gap: 8px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: ${({ $dense }) =>
+      $dense ? 'repeat(3, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))'};
+  }
 `;
 
-export const AmountOptionButton = styled.button<{ $active: boolean }>`
-  height: 44px;
+export const AmountOptionButton = styled.button<{ $active: boolean; $dense?: boolean }>`
+  height: ${({ $dense }) => ($dense ? '38px' : '44px')};
   border: 1px solid #d5dde6;
   border-color: ${({ $active }) => ($active ? '#0f766e' : '#d5dde6')};
   border-radius: 8px;
   background: ${({ $active }) => ($active ? '#ecfdf5' : '#ffffff')};
   color: ${({ $active }) => ($active ? '#0f766e' : '#111827')};
-  font-size: 0.94rem;
+  font-size: ${({ $dense }) => ($dense ? '0.88rem' : '0.94rem')};
   font-weight: 700;
   cursor: pointer;
 
