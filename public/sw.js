@@ -47,18 +47,31 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('push', (event) => {
   const payload = getPushPayload(event);
-  const badgeCount = Number(payload.badge || payload.activeButtonsCount || 0);
+  const hasBadgePayload =
+    Object.prototype.hasOwnProperty.call(payload, 'badge') ||
+    Object.prototype.hasOwnProperty.call(payload, 'activeButtonsCount');
+  const badgeCount = Number(payload.badge ?? payload.activeButtonsCount ?? 0);
 
   event.waitUntil((async () => {
-    await updateBadge(badgeCount);
+    if (hasBadgePayload) {
+      await updateBadge(badgeCount);
+    }
 
-    if (badgeCount <= 0) {
+    if (payload.showNotification === false) {
+      return;
+    }
+
+    const body = payload.body || (
+      badgeCount > 0 ? `Активных торговых сигналов: ${badgeCount}` : ''
+    );
+
+    if (!body) {
       return;
     }
 
     await self.registration.showNotification(payload.title || 'Trading monitor', {
       badge: '/pwa.svg',
-      body: payload.body || `Активных торговых сигналов: ${badgeCount}`,
+      body,
       icon: '/pwa.svg',
       tag: payload.tag || 'trading-signals',
       renotify: true,
