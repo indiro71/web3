@@ -13,9 +13,11 @@ import {
   PrimaryButton,
   SecondaryButton,
 } from './PairsDashboard.style';
+import { formatDecimal, reopenPositionAmounts } from './PairsDashboard.utils';
 
-interface BuyPositionModalProps {
+interface ReopenPositionModalProps {
   amount: number;
+  currentPositionAmount: number;
   loading: boolean;
   pair: Pair;
   side: BybitMarketPositionSide;
@@ -24,19 +26,19 @@ interface BuyPositionModalProps {
   onConfirm: () => void;
 }
 
-const allowedAmounts = [5, 10];
-
-export function BuyPositionModal({
+export function ReopenPositionModal({
   amount,
+  currentPositionAmount,
   loading,
   pair,
   side,
   onAmountChange,
   onClose,
   onConfirm,
-}: BuyPositionModalProps) {
+}: ReopenPositionModalProps) {
   const normalizedSide = side.toUpperCase();
-  const orderValue = amount * (pair.leverage ?? 1);
+  const leverage = pair.leverage ?? 1;
+  const orderValue = amount * leverage;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,24 +48,29 @@ export function BuyPositionModal({
   return (
     <ModalBackdrop role="presentation" onMouseDown={onClose}>
       <ModalDialog onMouseDown={(event) => event.stopPropagation()} onSubmit={handleSubmit}>
-        <ModalTitle>Подтвердить докупку</ModalTitle>
+        <ModalTitle>Закрыть и открыть заново</ModalTitle>
         <ModalText>
-          Будет докуплено {amount} долларов позиции {normalizedSide} с плечом {pair.leverage ?? 1}x для
-          монеты {pair.name}. Ориентировочный размер позиции: {orderValue.toFixed(2)} USDT.
+          Будет продано 100% позиции {normalizedSide} для {pair.name}. После закрытия будет
+          открыта новая позиция {normalizedSide} на {amount} USDT с плечом {leverage}x.
+          Ориентировочный размер новой позиции: {orderValue.toFixed(2)} USDT.
+        </ModalText>
+        <ModalText>
+          Текущая позиция: {formatDecimal(currentPositionAmount, 2)} USDT.
         </ModalText>
 
         <AmountField>
-          Сумма, USDT
-          <AmountOptions>
-            {allowedAmounts.map((amountOption) => (
+          Новая сумма, USDT
+          <AmountOptions $dense>
+            {reopenPositionAmounts.map((amountOption) => (
               <AmountOptionButton
                 key={amountOption}
                 $active={amount === amountOption}
+                $dense
                 disabled={loading}
                 type="button"
                 onClick={() => onAmountChange(amountOption)}
               >
-                {amountOption} USDT
+                {amountOption}
               </AmountOptionButton>
             ))}
           </AmountOptions>
@@ -73,8 +80,8 @@ export function BuyPositionModal({
           <SecondaryButton disabled={loading} type="button" onClick={onClose}>
             Отмена
           </SecondaryButton>
-          <PrimaryButton disabled={loading || !allowedAmounts.includes(amount)} type="submit">
-            {loading ? 'Покупка...' : 'Подтвердить'}
+          <PrimaryButton disabled={loading || !reopenPositionAmounts.includes(amount)} type="submit">
+            {loading ? 'Выполнение...' : 'Подтвердить'}
           </PrimaryButton>
         </ModalActions>
       </ModalDialog>

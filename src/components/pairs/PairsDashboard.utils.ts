@@ -1,4 +1,5 @@
 import type { Pair } from '../../types/pair';
+import type { BybitMarketPositionSide } from '../../api/pairs';
 
 const cryptoIconBaseUrl =
   'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color';
@@ -10,6 +11,7 @@ export const liquidationPercent = 97;
 
 export type StoredFilterKey = 'allData' | 'onlyPrice' | 'onlyNext';
 export type PairFilters = Record<StoredFilterKey, boolean>;
+export const reopenPositionAmounts = [20, 25, 30, 35, 40, 45, 50];
 
 export const readStoredFilter = (key: StoredFilterKey) => {
   if (typeof window === 'undefined') {
@@ -116,6 +118,33 @@ export const hasNextLongSignal = (pair: Pair) => {
 
 export const hasNextShortSignal = (pair: Pair) => {
   return Boolean(pair.nextBuyShortPrice && pair.currentPrice > pair.nextBuyShortPrice);
+};
+
+export const hasProfitSignal = (pair: Pair, side: BybitMarketPositionSide) => {
+  const percent = side === 'long' ? pair.longPercent : pair.shortPercent;
+
+  return Number(percent ?? 0) > 0;
+};
+
+export const getPairPositionAmount = (pair: Pair, side: BybitMarketPositionSide) => {
+  const baseAmount = Number(side === 'long' ? pair.longMargin : pair.shortMargin);
+  const totalAmount = Number(side === 'long' ? pair.longAllMargin : pair.shortAllMargin);
+
+  if (Number.isFinite(totalAmount) && totalAmount > 0) {
+    return totalAmount;
+  }
+
+  return Number.isFinite(baseAmount) && baseAmount > 0 ? baseAmount : 0;
+};
+
+export const getDefaultReopenAmount = (currentPositionAmount: number) => {
+  if (currentPositionAmount > 50) {
+    return 50;
+  }
+
+  const roundedAmount = Math.floor((currentPositionAmount - 5) / 5) * 5;
+
+  return Math.max(20, Math.min(50, roundedAmount));
 };
 
 export const getPercentTone = (value?: number) => {

@@ -13,11 +13,18 @@ import { PairRow } from './PairRow';
 interface PairsTableProps {
   loading: boolean;
   onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
+  onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pairs: Pair[];
   totalPairs: number;
 }
 
-export function PairsTable({ loading, onBuySignalClick, pairs, totalPairs }: PairsTableProps) {
+export function PairsTable({
+  loading,
+  onBuySignalClick,
+  onReopenSignalClick,
+  pairs,
+  totalPairs,
+}: PairsTableProps) {
   return (
     <TableSurface>
       <TableScroll>
@@ -46,7 +53,12 @@ export function PairsTable({ loading, onBuySignalClick, pairs, totalPairs }: Pai
           </thead>
           <tbody>
             {pairs.map((pair) => (
-              <PairRow key={pair._id} onBuySignalClick={onBuySignalClick} pair={pair} />
+              <PairRow
+                key={pair._id}
+                onBuySignalClick={onBuySignalClick}
+                onReopenSignalClick={onReopenSignalClick}
+                pair={pair}
+              />
             ))}
           </tbody>
         </PairsTableElement>

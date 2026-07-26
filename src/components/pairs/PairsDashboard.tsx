@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   openBybitMarketPosition,
+  reopenBybitMarketPosition,
   UnauthorizedError,
   type BybitMarketPositionSide,
+  type CloseBybitMarketPositionResult,
 } from '../../api/pairs';
 import { usePairs } from '../../hooks/usePairs';
 import type { Pair } from '../../types/pair';
@@ -10,8 +12,12 @@ import { GlobalStyle, Notice, Page, Toast } from './PairsDashboard.style';
 import { BuyPositionModal } from './BuyPositionModal';
 import { PairsTable } from './PairsTable';
 import { PairsToolbar } from './PairsToolbar';
+import { ReopenPositionModal } from './ReopenPositionModal';
 import {
   filterPairs,
+  formatDecimal,
+  getDefaultReopenAmount,
+  getPairPositionAmount,
   readStoredFilter,
   storeFilter,
   type PairFilters,
@@ -28,10 +34,39 @@ interface BuyPositionRequest {
   side: BybitMarketPositionSide;
 }
 
+interface ReopenPositionRequest {
+  pair: Pair;
+  side: BybitMarketPositionSide;
+}
+
 interface DashboardToast {
   message: string;
   tone: 'success' | 'error';
 }
+
+const formatTradeValue = (value?: number | string | null, maximumFractionDigits = 8) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return '0';
+  }
+
+  return formatDecimal(numericValue, maximumFractionDigits);
+};
+
+const getCloseSummary = (close: CloseBybitMarketPositionResult) => {
+  const closedSize = close.closedPnl?.closedSize ?? close.qty;
+  const closedValue = close.closedPnl?.cumExitValue ?? close.positionValue;
+  const closedPnl = close.closedPnl?.closedPnl;
+  const pnlText = closedPnl === undefined || closedPnl === null
+    ? 'PnL пока не вернулся'
+    : `${formatTradeValue(closedPnl, 4)} USDT`;
+  const valueText = Number.isFinite(Number(closedValue))
+    ? ` (${formatTradeValue(closedValue, 2)} USDT)`
+    : '';
+
+  return `Продано ${formatTradeValue(closedSize)} ${close.symbol}${valueText}, выгода: ${pnlText}`;
+};
 
 export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs({
@@ -47,6 +82,9 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   const [buyPositionRequest, setBuyPositionRequest] = useState<BuyPositionRequest | null>(null);
   const [buyAmount, setBuyAmount] = useState(5);
   const [buyLoading, setBuyLoading] = useState(false);
+  const [reopenPositionRequest, setReopenPositionRequest] = useState<ReopenPositionRequest | null>(null);
+  const [reopenAmount, setReopenAmount] = useState(20);
+  const [reopenLoading, setReopenLoading] = useState(false);
   const [toast, setToast] = useState<DashboardToast | null>(null);
 
   const visiblePairs = useMemo(() => {
@@ -58,7 +96,7 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
       return;
     }
 
-    const timer = window.setTimeout(() => setToast(null), 4200);
+    const timer = window.setTimeout(() => setToast(null), 7200);
 
     return () => window.clearTimeout(timer);
   }, [toast]);
@@ -77,12 +115,25 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   };
 
   const handleBuySignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
+    setReopenPositionRequest(null);
     setBuyAmount(5);
     setBuyPositionRequest({ pair, side });
   };
 
   const handleBuyAmountChange = (amount: number) => {
-    setBuyAmount(Math.min(Math.max(amount || 0, 0), 5));
+    setBuyAmount(amount);
+  };
+
+  const handleReopenSignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
+    const currentPositionAmount = getPairPositionAmount(pair, side);
+
+    setBuyPositionRequest(null);
+    setReopenAmount(getDefaultReopenAmount(currentPositionAmount));
+    setReopenPositionRequest({ pair, side });
+  };
+
+  const handleReopenAmountChange = (amount: number) => {
+    setReopenAmount(amount);
   };
 
   const handleBuyPosition = async () => {
@@ -121,6 +172,53 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
     }
   };
 
+  const handleReopenPosition = async () => {
+    if (!reopenPositionRequest) {
+      return;
+    }
+
+    setReopenLoading(true);
+
+    try {
+      const result = await reopenBybitMarketPosition({
+        amount: reopenAmount,
+        pairId: reopenPositionRequest.pair._id,
+        side: reopenPositionRequest.side,
+        token: authToken,
+      });
+      const closeSummary = getCloseSummary(result.close);
+
+      setReopenPositionRequest(null);
+
+      if (!result.success || !result.reopen) {
+        setToast({
+          message: `${closeSummary}. Новая позиция не открыта: ${result.openError || 'ошибка Bybit'}`,
+          tone: 'error',
+        });
+        await reload();
+        return;
+      }
+
+      setToast({
+        message: `${closeSummary}. Новая ${result.side.toUpperCase()} открыта: ${result.reopen.amount} USDT -> ${result.reopen.orderValue} USDT`,
+        tone: 'success',
+      });
+      await reload();
+    } catch (requestError) {
+      if (requestError instanceof UnauthorizedError) {
+        onLogout();
+        return;
+      }
+
+      setToast({
+        message: requestError instanceof Error ? requestError.message : 'Не удалось переоткрыть позицию',
+        tone: 'error',
+      });
+    } finally {
+      setReopenLoading(false);
+    }
+  };
+
   return (
     <>
       <GlobalStyle />
@@ -149,6 +247,7 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
         <PairsTable
           loading={loading}
           onBuySignalClick={handleBuySignalClick}
+          onReopenSignalClick={handleReopenSignalClick}
           pairs={visiblePairs}
           totalPairs={pairs.length}
         />
@@ -162,6 +261,22 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
             onAmountChange={handleBuyAmountChange}
             onClose={() => setBuyPositionRequest(null)}
             onConfirm={handleBuyPosition}
+          />
+        )}
+
+        {reopenPositionRequest && (
+          <ReopenPositionModal
+            amount={reopenAmount}
+            currentPositionAmount={getPairPositionAmount(
+              reopenPositionRequest.pair,
+              reopenPositionRequest.side,
+            )}
+            loading={reopenLoading}
+            pair={reopenPositionRequest.pair}
+            side={reopenPositionRequest.side}
+            onAmountChange={handleReopenAmountChange}
+            onClose={() => setReopenPositionRequest(null)}
+            onConfirm={handleReopenPosition}
           />
         )}
 

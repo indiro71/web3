@@ -5,7 +5,7 @@ const productionApiBaseUrl = 'https://indiro.ru/api-v2';
 const defaultApiBaseUrl = import.meta.env.DEV ? localApiBaseUrl : productionApiBaseUrl;
 const defaultSocketPath = import.meta.env.DEV ? '/socket.io' : '/api-v2/socket.io';
 const defaultRequestTimeoutMs = 10000;
-const defaultTradeRequestTimeoutMs = 15000;
+const defaultTradeRequestTimeoutMs = 45000;
 
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '');
 const normalizePath = (value: string) => {
@@ -50,6 +50,50 @@ export interface OpenBybitMarketPositionResult {
   pairId: string;
   price: number;
   qty: string;
+  side: BybitMarketPositionSide;
+  success: boolean;
+  symbol: string;
+}
+
+interface ReopenBybitMarketPositionParams {
+  amount: number;
+  pairId: string;
+  side: BybitMarketPositionSide;
+  token: string;
+}
+
+export interface BybitClosedPnl {
+  avgEntryPrice: string;
+  avgExitPrice: string;
+  closeFee: string;
+  closedPnl: string;
+  closedSize: string;
+  cumEntryValue: string;
+  cumExitValue: string;
+  orderId: string;
+  qty: string;
+  symbol: string;
+}
+
+export interface CloseBybitMarketPositionResult {
+  avgEntryPrice: string;
+  closedPnl: BybitClosedPnl | null;
+  orderId?: string;
+  positionIdx: 1 | 2;
+  positionValue: string;
+  qty: string;
+  side: string;
+  symbol: string;
+  unrealisedPnl: string;
+}
+
+export interface ReopenBybitMarketPositionResult {
+  amount: number;
+  close: CloseBybitMarketPositionResult;
+  name: string;
+  openError?: string;
+  pairId: string;
+  reopen?: OpenBybitMarketPositionResult;
   side: BybitMarketPositionSide;
   success: boolean;
   symbol: string;
@@ -142,6 +186,40 @@ export async function openBybitMarketPosition({
 
   if (!response.ok) {
     throw new Error(data?.message || data?.error || 'Failed to open Bybit market position');
+  }
+
+  return data;
+}
+
+export async function reopenBybitMarketPosition({
+  amount,
+  pairId,
+  side,
+  token,
+}: ReopenBybitMarketPositionParams): Promise<ReopenBybitMarketPositionResult> {
+  const response = await request(
+    `${API_BASE_URL}/scanprices/pairs/${pairId}/bybit/reopen-market-position`,
+    {
+      body: JSON.stringify({
+        amount,
+        side,
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    },
+    defaultTradeRequestTimeoutMs,
+  );
+  const data = await readResponseBody(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError(data?.message);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || 'Failed to reopen Bybit market position');
   }
 
   return data;
