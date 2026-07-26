@@ -6,6 +6,7 @@ import {
   type BybitMarketPositionSide,
   type CloseBybitMarketPositionResult,
 } from '../../api/pairs';
+import { subscribeToPushNotifications, updateAppBadge } from '../../api/push';
 import { usePairs } from '../../hooks/usePairs';
 import type { Pair } from '../../types/pair';
 import { GlobalStyle, Notice, Page, Toast } from './PairsDashboard.style';
@@ -17,6 +18,7 @@ import type { AppThemeMode } from './PairsDashboard.theme';
 import {
   filterPairs,
   formatDecimal,
+  getActiveTradingButtonsCount,
   getDefaultReopenAmount,
   getPairPositionAmount,
   readStoredFilter,
@@ -141,6 +143,17 @@ export function PairsDashboard({
     return () => window.clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    subscribeToPushNotifications(authToken).catch((pushError: unknown) => {
+      if (pushError instanceof UnauthorizedError) {
+        onLogout();
+        return;
+      }
+
+      console.error('Push subscription failed:', pushError);
+    });
+  }, [authToken, onLogout]);
+
   const toggleFilter = (key: StoredFilterKey) => {
     setFilters((previousFilters) => {
       const nextFilters = {
@@ -191,6 +204,14 @@ export function PairsDashboard({
   ) => {
     return (tradeCooldowns[getTradeCooldownKey(pairId, action, side)] ?? 0) > Date.now();
   };
+
+  useEffect(() => {
+    const activeButtonsCount = getActiveTradingButtonsCount(pairs, isTradeButtonCoolingDown);
+
+    updateAppBadge(activeButtonsCount).catch((badgeError: unknown) => {
+      console.error('App badge update failed:', badgeError);
+    });
+  }, [pairs, tradeCooldowns]);
 
   const handleBuyPosition = async () => {
     if (!buyPositionRequest) {

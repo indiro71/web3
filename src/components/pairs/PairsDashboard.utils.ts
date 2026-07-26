@@ -147,6 +147,41 @@ export const getDefaultReopenAmount = (currentPositionAmount: number) => {
   return Math.max(20, Math.min(50, roundedAmount));
 };
 
+export const getActiveTradingButtonsCount = (
+  pairs: Pair[],
+  isCoolingDown?: (
+    pairId: string,
+    action: 'buy' | 'reopen',
+    side: BybitMarketPositionSide,
+  ) => boolean,
+) => {
+  return pairs.reduce((count, pair) => {
+    if (pair.isActive === false || pair.exchange !== 'BYBIT') {
+      return count;
+    }
+
+    let pairButtonsCount = 0;
+
+    if (hasProfitSignal(pair, 'long') && !isCoolingDown?.(pair._id, 'reopen', 'long')) {
+      pairButtonsCount += 1;
+    }
+
+    if (hasProfitSignal(pair, 'short') && !isCoolingDown?.(pair._id, 'reopen', 'short')) {
+      pairButtonsCount += 1;
+    }
+
+    if (hasNextLongSignal(pair) && !isCoolingDown?.(pair._id, 'buy', 'long')) {
+      pairButtonsCount += 1;
+    }
+
+    if (hasNextShortSignal(pair) && !isCoolingDown?.(pair._id, 'buy', 'short')) {
+      pairButtonsCount += 1;
+    }
+
+    return count + pairButtonsCount;
+  }, 0);
+};
+
 export const getPercentTone = (value?: number) => {
   if (!value) return 'muted';
   return value > 0 ? 'positive' : 'negative';
