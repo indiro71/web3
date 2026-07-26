@@ -61,9 +61,7 @@ self.addEventListener('push', (event) => {
       return;
     }
 
-    const body = payload.body || (
-      badgeCount > 0 ? `Активных торговых сигналов: ${badgeCount}` : ''
-    );
+    const body = typeof payload.body === 'string' ? payload.body.trim() : '';
 
     if (!body) {
       return;
