@@ -13,6 +13,7 @@ import { BuyPositionModal } from './BuyPositionModal';
 import { PairsTable } from './PairsTable';
 import { PairsToolbar } from './PairsToolbar';
 import { ReopenPositionModal } from './ReopenPositionModal';
+import type { AppThemeMode } from './PairsDashboard.theme';
 import {
   filterPairs,
   formatDecimal,
@@ -26,7 +27,9 @@ import {
 
 interface PairsDashboardProps {
   authToken: string;
+  themeMode: AppThemeMode;
   onLogout: () => void;
+  onThemeToggle: () => void;
 }
 
 interface BuyPositionRequest {
@@ -43,6 +46,17 @@ interface DashboardToast {
   message: string;
   tone: 'success' | 'error';
 }
+
+type TradeActionKind = 'buy' | 'reopen';
+type TradeCooldowns = Record<string, number>;
+
+const tradeButtonCooldownMs = 60_000;
+
+const getTradeCooldownKey = (
+  pairId: string,
+  action: TradeActionKind,
+  side: BybitMarketPositionSide,
+) => `${pairId}:${action}:${side}`;
 
 const formatTradeValue = (value?: number | string | null, maximumFractionDigits = 8) => {
   const numericValue = Number(value);
@@ -68,7 +82,12 @@ const getCloseSummary = (close: CloseBybitMarketPositionResult) => {
   return `Продано ${formatTradeValue(closedSize)} ${close.symbol}${valueText}, выгода: ${pnlText}`;
 };
 
-export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
+export function PairsDashboard({
+  authToken,
+  themeMode,
+  onLogout,
+  onThemeToggle,
+}: PairsDashboardProps) {
   const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs({
     token: authToken,
     onUnauthorized: onLogout,
@@ -85,6 +104,7 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   const [reopenPositionRequest, setReopenPositionRequest] = useState<ReopenPositionRequest | null>(null);
   const [reopenAmount, setReopenAmount] = useState(20);
   const [reopenLoading, setReopenLoading] = useState(false);
+  const [tradeCooldowns, setTradeCooldowns] = useState<TradeCooldowns>({});
   const [toast, setToast] = useState<DashboardToast | null>(null);
 
   const visiblePairs = useMemo(() => {
@@ -101,6 +121,26 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      const now = Date.now();
+
+      setTradeCooldowns((previousCooldowns) => {
+        const activeCooldownEntries = Object.entries(previousCooldowns).filter(([, expiresAt]) => {
+          return expiresAt > now;
+        });
+
+        if (activeCooldownEntries.length === Object.keys(previousCooldowns).length) {
+          return previousCooldowns;
+        }
+
+        return Object.fromEntries(activeCooldownEntries);
+      });
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   const toggleFilter = (key: StoredFilterKey) => {
     setFilters((previousFilters) => {
       const nextFilters = {
@@ -115,6 +155,10 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   };
 
   const handleBuySignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
+    setTradeCooldowns((previousCooldowns) => ({
+      ...previousCooldowns,
+      [getTradeCooldownKey(pair._id, 'buy', side)]: Date.now() + tradeButtonCooldownMs,
+    }));
     setReopenPositionRequest(null);
     setBuyAmount(5);
     setBuyPositionRequest({ pair, side });
@@ -127,6 +171,10 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   const handleReopenSignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
     const currentPositionAmount = getPairPositionAmount(pair, side);
 
+    setTradeCooldowns((previousCooldowns) => ({
+      ...previousCooldowns,
+      [getTradeCooldownKey(pair._id, 'reopen', side)]: Date.now() + tradeButtonCooldownMs,
+    }));
     setBuyPositionRequest(null);
     setReopenAmount(getDefaultReopenAmount(currentPositionAmount));
     setReopenPositionRequest({ pair, side });
@@ -134,6 +182,14 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
 
   const handleReopenAmountChange = (amount: number) => {
     setReopenAmount(amount);
+  };
+
+  const isTradeButtonCoolingDown = (
+    pairId: string,
+    action: TradeActionKind,
+    side: BybitMarketPositionSide,
+  ) => {
+    return (tradeCooldowns[getTradeCooldownKey(pairId, action, side)] ?? 0) > Date.now();
   };
 
   const handleBuyPosition = async () => {
@@ -231,8 +287,10 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
           onRefresh={reload}
           onLogout={onLogout}
           onSearchChange={setSearchValue}
+          onThemeToggle={onThemeToggle}
           searchValue={searchValue}
           socketStatus={socketStatus}
+          themeMode={themeMode}
           totalCount={pairs.length}
           visibleCount={visiblePairs.length}
         />
@@ -246,6 +304,7 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
 
         <PairsTable
           loading={loading}
+          isTradeButtonCoolingDown={isTradeButtonCoolingDown}
           onBuySignalClick={handleBuySignalClick}
           onReopenSignalClick={handleReopenSignalClick}
           pairs={visiblePairs}

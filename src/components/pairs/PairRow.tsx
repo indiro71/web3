@@ -27,22 +27,44 @@ import {
 import { CryptoIcon } from './CryptoIcon';
 
 interface PairRowProps {
+  isTradeButtonCoolingDown: (
+    pairId: string,
+    action: 'buy' | 'reopen',
+    side: BybitMarketPositionSide,
+  ) => boolean;
   onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pair: Pair;
 }
 
-export function PairRow({ onBuySignalClick, onReopenSignalClick, pair }: PairRowProps) {
+export function PairRow({
+  isTradeButtonCoolingDown,
+  onBuySignalClick,
+  onReopenSignalClick,
+  pair,
+}: PairRowProps) {
   const longMargin = formatMargin(pair.longMargin, pair.longAllMargin);
   const shortMargin = formatMargin(pair.shortMargin, pair.shortAllMargin);
   const longNextSignal = hasNextLongSignal(pair);
   const shortNextSignal = hasNextShortSignal(pair);
   const longProfitSignal = hasProfitSignal(pair, 'long');
   const shortProfitSignal = hasProfitSignal(pair, 'short');
-  const canReopenLong = pair.exchange === 'BYBIT' && longProfitSignal;
-  const canReopenShort = pair.exchange === 'BYBIT' && shortProfitSignal;
-  const canBuyLong = pair.exchange === 'BYBIT' && longNextSignal;
-  const canBuyShort = pair.exchange === 'BYBIT' && shortNextSignal;
+  const canReopenLong =
+    pair.exchange === 'BYBIT' &&
+    longProfitSignal &&
+    !isTradeButtonCoolingDown(pair._id, 'reopen', 'long');
+  const canReopenShort =
+    pair.exchange === 'BYBIT' &&
+    shortProfitSignal &&
+    !isTradeButtonCoolingDown(pair._id, 'reopen', 'short');
+  const canBuyLong =
+    pair.exchange === 'BYBIT' &&
+    longNextSignal &&
+    !isTradeButtonCoolingDown(pair._id, 'buy', 'long');
+  const canBuyShort =
+    pair.exchange === 'BYBIT' &&
+    shortNextSignal &&
+    !isTradeButtonCoolingDown(pair._id, 'buy', 'short');
 
   return (
     <tr>
