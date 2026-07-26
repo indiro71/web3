@@ -3,7 +3,8 @@ import type { BybitMarketPositionSide } from '../../api/pairs';
 import type { Pair } from '../../types/pair';
 import {
   AmountField,
-  AmountInput,
+  AmountOptionButton,
+  AmountOptions,
   ModalActions,
   ModalBackdrop,
   ModalDialog,
@@ -23,7 +24,7 @@ interface BuyPositionModalProps {
   onConfirm: () => void;
 }
 
-const MAX_AMOUNT = 5;
+const allowedAmounts = [5, 10];
 
 export function BuyPositionModal({
   amount,
@@ -53,23 +54,26 @@ export function BuyPositionModal({
 
         <AmountField>
           Сумма, USDT
-          <AmountInput
-            disabled={loading}
-            inputMode="decimal"
-            max={MAX_AMOUNT}
-            min={0.01}
-            onChange={(event) => onAmountChange(Number(event.target.value))}
-            step={0.01}
-            type="number"
-            value={amount}
-          />
+          <AmountOptions>
+            {allowedAmounts.map((amountOption) => (
+              <AmountOptionButton
+                key={amountOption}
+                $active={amount === amountOption}
+                disabled={loading}
+                type="button"
+                onClick={() => onAmountChange(amountOption)}
+              >
+                {amountOption} USDT
+              </AmountOptionButton>
+            ))}
+          </AmountOptions>
         </AmountField>
 
         <ModalActions>
           <SecondaryButton disabled={loading} type="button" onClick={onClose}>
             Отмена
           </SecondaryButton>
-          <PrimaryButton disabled={loading || amount <= 0 || amount > MAX_AMOUNT} type="submit">
+          <PrimaryButton disabled={loading || !allowedAmounts.includes(amount)} type="submit">
             {loading ? 'Покупка...' : 'Подтвердить'}
           </PrimaryButton>
         </ModalActions>

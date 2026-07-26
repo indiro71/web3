@@ -82,7 +82,7 @@ export function PairsDashboard({ authToken, onLogout }: PairsDashboardProps) {
   };
 
   const handleBuyAmountChange = (amount: number) => {
-    setBuyAmount(Math.min(Math.max(amount || 0, 0), 5));
+    setBuyAmount(amount);
   };
 
   const handleBuyPosition = async () => {

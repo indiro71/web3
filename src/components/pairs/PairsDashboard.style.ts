@@ -638,7 +638,7 @@ export const ModalText = styled.p`
   line-height: 1.5;
 `;
 
-export const AmountField = styled.label`
+export const AmountField = styled.div`
   display: grid;
   gap: 7px;
   margin-bottom: 18px;
@@ -647,19 +647,36 @@ export const AmountField = styled.label`
   font-weight: 800;
 `;
 
-export const AmountInput = styled.input`
-  width: 100%;
-  height: 38px;
-  border: 1px solid #d5dde6;
-  border-radius: 7px;
-  padding: 0 10px;
-  color: #111827;
-  font-size: 0.95rem;
-  outline: none;
+export const AmountOptions = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+`;
 
-  &:focus {
+export const AmountOptionButton = styled.button<{ $active: boolean }>`
+  height: 44px;
+  border: 1px solid #d5dde6;
+  border-color: ${({ $active }) => ($active ? '#0f766e' : '#d5dde6')};
+  border-radius: 8px;
+  background: ${({ $active }) => ($active ? '#ecfdf5' : '#ffffff')};
+  color: ${({ $active }) => ($active ? '#0f766e' : '#111827')};
+  font-size: 0.94rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${({ $active }) => ($active ? '#0f766e' : '#94a3b8')};
+  }
+
+  &:focus-visible {
+    outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.62;
   }
 `;
 
