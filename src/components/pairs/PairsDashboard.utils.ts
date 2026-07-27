@@ -128,11 +128,6 @@ export const hasProfitSignal = (pair: Pair, side: BybitMarketPositionSide) => {
 
 export const getPairPositionAmount = (pair: Pair, side: BybitMarketPositionSide) => {
   const baseAmount = Number(side === 'long' ? pair.longMargin : pair.shortMargin);
-  const totalAmount = Number(side === 'long' ? pair.longAllMargin : pair.shortAllMargin);
-
-  if (Number.isFinite(totalAmount) && totalAmount > 0) {
-    return totalAmount;
-  }
 
   return Number.isFinite(baseAmount) && baseAmount > 0 ? baseAmount : 0;
 };
@@ -142,7 +137,7 @@ export const getDefaultReopenAmount = (currentPositionAmount: number) => {
     return 50;
   }
 
-  const roundedAmount = Math.floor((currentPositionAmount - 5) / 5) * 5;
+  const roundedAmount = Math.ceil((currentPositionAmount - 5) / 5) * 5;
 
   return Math.max(20, Math.min(50, roundedAmount));
 };
