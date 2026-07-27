@@ -105,6 +105,7 @@ export function PairsDashboard({
   const [buyLoading, setBuyLoading] = useState(false);
   const [reopenPositionRequest, setReopenPositionRequest] = useState<ReopenPositionRequest | null>(null);
   const [reopenAmount, setReopenAmount] = useState(20);
+  const [shouldReopenAfterClose, setShouldReopenAfterClose] = useState(true);
   const [reopenLoading, setReopenLoading] = useState(false);
   const [tradeCooldowns, setTradeCooldowns] = useState<TradeCooldowns>({});
   const [toast, setToast] = useState<DashboardToast | null>(null);
@@ -190,10 +191,12 @@ export function PairsDashboard({
     }));
     setBuyPositionRequest(null);
     setReopenAmount(getDefaultReopenAmount(currentPositionAmount));
+    setShouldReopenAfterClose(true);
     setReopenPositionRequest({ pair, side });
   };
 
   const handleReopenAmountChange = (amount: number) => {
+    setShouldReopenAfterClose(true);
     setReopenAmount(amount);
   };
 
@@ -258,14 +261,24 @@ export function PairsDashboard({
 
     try {
       const result = await reopenBybitMarketPosition({
-        amount: reopenAmount,
+        amount: shouldReopenAfterClose ? reopenAmount : undefined,
         pairId: reopenPositionRequest.pair._id,
+        reopen: shouldReopenAfterClose,
         side: reopenPositionRequest.side,
         token: authToken,
       });
       const closeSummary = getCloseSummary(result.close);
 
       setReopenPositionRequest(null);
+
+      if (result.reopenSkipped) {
+        setToast({
+          message: `${closeSummary}. Новая позиция не открывалась.`,
+          tone: 'success',
+        });
+        await reload();
+        return;
+      }
 
       if (!result.success || !result.reopen) {
         setToast({
@@ -353,10 +366,12 @@ export function PairsDashboard({
             )}
             loading={reopenLoading}
             pair={reopenPositionRequest.pair}
+            shouldReopen={shouldReopenAfterClose}
             side={reopenPositionRequest.side}
             onAmountChange={handleReopenAmountChange}
             onClose={() => setReopenPositionRequest(null)}
             onConfirm={handleReopenPosition}
+            onShouldReopenChange={setShouldReopenAfterClose}
           />
         )}
 

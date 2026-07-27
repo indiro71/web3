@@ -56,8 +56,9 @@ export interface OpenBybitMarketPositionResult {
 }
 
 interface ReopenBybitMarketPositionParams {
-  amount: number;
+  amount?: number;
   pairId: string;
+  reopen?: boolean;
   side: BybitMarketPositionSide;
   token: string;
 }
@@ -88,12 +89,13 @@ export interface CloseBybitMarketPositionResult {
 }
 
 export interface ReopenBybitMarketPositionResult {
-  amount: number;
+  amount?: number;
   close: CloseBybitMarketPositionResult;
   name: string;
   openError?: string;
   pairId: string;
   reopen?: OpenBybitMarketPositionResult;
+  reopenSkipped?: boolean;
   side: BybitMarketPositionSide;
   success: boolean;
   symbol: string;
@@ -194,6 +196,7 @@ export async function openBybitMarketPosition({
 export async function reopenBybitMarketPosition({
   amount,
   pairId,
+  reopen,
   side,
   token,
 }: ReopenBybitMarketPositionParams): Promise<ReopenBybitMarketPositionResult> {
@@ -202,6 +205,7 @@ export async function reopenBybitMarketPosition({
     {
       body: JSON.stringify({
         amount,
+        reopen,
         side,
       }),
       headers: {

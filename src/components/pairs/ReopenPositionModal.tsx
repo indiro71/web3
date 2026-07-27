@@ -20,10 +20,12 @@ interface ReopenPositionModalProps {
   currentPositionAmount: number;
   loading: boolean;
   pair: Pair;
+  shouldReopen: boolean;
   side: BybitMarketPositionSide;
   onAmountChange: (amount: number) => void;
   onClose: () => void;
   onConfirm: () => void;
+  onShouldReopenChange: (shouldReopen: boolean) => void;
 }
 
 export function ReopenPositionModal({
@@ -31,10 +33,12 @@ export function ReopenPositionModal({
   currentPositionAmount,
   loading,
   pair,
+  shouldReopen,
   side,
   onAmountChange,
   onClose,
   onConfirm,
+  onShouldReopenChange,
 }: ReopenPositionModalProps) {
   const normalizedSide = side.toUpperCase();
   const leverage = pair.leverage ?? 1;
@@ -48,27 +52,42 @@ export function ReopenPositionModal({
   return (
     <ModalBackdrop role="presentation" onMouseDown={onClose}>
       <ModalDialog onMouseDown={(event) => event.stopPropagation()} onSubmit={handleSubmit}>
-        <ModalTitle>Закрыть и открыть заново</ModalTitle>
+        <ModalTitle>{shouldReopen ? 'Закрыть и открыть заново' : 'Закрыть позицию'}</ModalTitle>
         <ModalText>
-          Будет продано 100% позиции {normalizedSide} для {pair.name}. После закрытия будет
-          открыта новая позиция {normalizedSide} на {amount} USDT с плечом {leverage}x.
-          Ориентировочный размер новой позиции: {orderValue.toFixed(2)} USDT.
+          Будет продано 100% позиции {normalizedSide} для {pair.name}.
+          {shouldReopen
+            ? ` После закрытия будет открыта новая позиция ${normalizedSide} на ${amount} USDT с плечом ${leverage}x. Ориентировочный размер новой позиции: ${orderValue.toFixed(2)} USDT.`
+            : ' Новая позиция после продажи открываться не будет.'}
         </ModalText>
         <ModalText>
           Текущая позиция: {formatDecimal(currentPositionAmount, 2)} USDT.
         </ModalText>
 
         <AmountField>
-          Новая сумма, USDT
+          Действие после продажи
           <AmountOptions $dense>
+            <AmountOptionButton
+              $active={!shouldReopen}
+              aria-pressed={!shouldReopen}
+              $dense
+              disabled={loading}
+              type="button"
+              onClick={() => onShouldReopenChange(false)}
+            >
+              Не покупать
+            </AmountOptionButton>
             {reopenPositionAmounts.map((amountOption) => (
               <AmountOptionButton
                 key={amountOption}
-                $active={amount === amountOption}
+                $active={shouldReopen && amount === amountOption}
+                aria-pressed={shouldReopen && amount === amountOption}
                 $dense
                 disabled={loading}
                 type="button"
-                onClick={() => onAmountChange(amountOption)}
+                onClick={() => {
+                  onShouldReopenChange(true);
+                  onAmountChange(amountOption);
+                }}
               >
                 {amountOption}
               </AmountOptionButton>
@@ -80,7 +99,7 @@ export function ReopenPositionModal({
           <SecondaryButton disabled={loading} type="button" onClick={onClose}>
             Отмена
           </SecondaryButton>
-          <PrimaryButton disabled={loading || !reopenPositionAmounts.includes(amount)} type="submit">
+          <PrimaryButton disabled={loading || (shouldReopen && !reopenPositionAmounts.includes(amount))} type="submit">
             {loading ? 'Выполнение...' : 'Подтвердить'}
           </PrimaryButton>
         </ModalActions>
