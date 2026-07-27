@@ -121,9 +121,23 @@ export const hasNextShortSignal = (pair: Pair) => {
 };
 
 export const hasProfitSignal = (pair: Pair, side: BybitMarketPositionSide) => {
-  const percent = side === 'long' ? pair.longPercent : pair.shortPercent;
+  const currentPrice = Number(pair.currentPrice);
 
-  return Number(percent ?? 0) > 0;
+  if (!Number.isFinite(currentPrice) || currentPrice <= 0) {
+    return false;
+  }
+
+  if (side === 'long') {
+    const sellPrice = Number(pair.sellLongPrice);
+    const margin = Number(pair.longMargin);
+
+    return Number.isFinite(sellPrice) && sellPrice > 0 && margin > 0 && currentPrice > sellPrice;
+  }
+
+  const sellPrice = Number(pair.sellShortPrice);
+  const margin = Number(pair.shortMargin);
+
+  return Number.isFinite(sellPrice) && sellPrice > 0 && margin > 0 && currentPrice < sellPrice;
 };
 
 export const getPairPositionAmount = (pair: Pair, side: BybitMarketPositionSide) => {
