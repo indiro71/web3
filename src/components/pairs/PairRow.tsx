@@ -33,6 +33,7 @@ interface PairRowProps {
     side: BybitMarketPositionSide,
   ) => boolean;
   onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
+  onContextMenu: (pair: Pair, x: number, y: number) => void;
   onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pair: Pair;
 }
@@ -60,6 +61,7 @@ const getPairUpdateStatus = (dateUpdate?: string): CryptoIconStatus => {
 export function PairRow({
   isTradeButtonCoolingDown,
   onBuySignalClick,
+  onContextMenu,
   onReopenSignalClick,
   pair,
 }: PairRowProps) {
@@ -78,6 +80,16 @@ export function PairRow({
     pair.exchange === 'BYBIT' &&
     shortProfitSignal &&
     !isTradeButtonCoolingDown(pair._id, 'reopen', 'short');
+  const canManuallyReopenLong =
+    pair.exchange === 'BYBIT' &&
+    Number(pair.longPercent) > 0 &&
+    Number(pair.longMargin) > 0 &&
+    !isTradeButtonCoolingDown(pair._id, 'reopen', 'long');
+  const canManuallyReopenShort =
+    pair.exchange === 'BYBIT' &&
+    Number(pair.shortPercent) > 0 &&
+    Number(pair.shortMargin) > 0 &&
+    !isTradeButtonCoolingDown(pair._id, 'reopen', 'short');
   const canBuyLong =
     pair.exchange === 'BYBIT' &&
     longNextSignal &&
@@ -88,7 +100,12 @@ export function PairRow({
     !isTradeButtonCoolingDown(pair._id, 'buy', 'short');
 
   return (
-    <tr>
+    <tr
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onContextMenu(pair, event.clientX, event.clientY);
+      }}
+    >
       <NameCell>
         <NameContent>
           <CryptoIcon pair={pair} updateStatus={updateStatus} />
@@ -109,7 +126,12 @@ export function PairRow({
               {formatPercent(pair.longPercent)}
             </NextSignalButton>
           ) : (
-            <MetricValue $tone={getPercentTone(pair.longPercent)}>
+            <MetricValue
+              $tone={getPercentTone(pair.longPercent)}
+              onDoubleClick={canManuallyReopenLong
+                ? () => onReopenSignalClick(pair, 'long')
+                : undefined}
+            >
               {formatPercent(pair.longPercent)}
             </MetricValue>
           )}
@@ -123,7 +145,12 @@ export function PairRow({
               {formatPercent(pair.shortPercent)}
             </NextSignalButton>
           ) : (
-            <MetricValue $tone={getPercentTone(pair.shortPercent)}>
+            <MetricValue
+              $tone={getPercentTone(pair.shortPercent)}
+              onDoubleClick={canManuallyReopenShort
+                ? () => onReopenSignalClick(pair, 'short')
+                : undefined}
+            >
               {formatPercent(pair.shortPercent)}
             </MetricValue>
           )}

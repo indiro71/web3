@@ -24,7 +24,7 @@ export const Page = styled.main`
 
 export const TopBar = styled.section`
   display: grid;
-  grid-template-columns: minmax(220px, 360px) auto minmax(68px, max-content) minmax(360px, 1fr);
+  grid-template-columns: minmax(160px, 260px) auto minmax(68px, max-content) minmax(360px, 1fr);
   align-items: center;
   gap: 8px;
   margin: 0 auto 8px;
@@ -695,6 +695,50 @@ export const AmountField = styled.div`
   font-weight: 800;
 `;
 
+export const ModalField = styled.label`
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: ${({ theme }) => theme.colors.secondaryText};
+  font-size: 0.82rem;
+  font-weight: 800;
+`;
+
+export const ModalFieldGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+`;
+
+export const ModalInput = styled.input`
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  border: 1px solid ${({ theme }) => theme.colors.tableBorder};
+  border-radius: 7px;
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.primaryText};
+  padding: 0 10px;
+  outline: none;
+  font: inherit;
+  font-weight: 600;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.activeBorder};
+    box-shadow: ${({ theme }) => theme.colors.focusShadow};
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
+`;
+
 export const AmountOptions = styled.div<{ $dense?: boolean }>`
   display: grid;
   grid-template-columns: ${({ $dense }) =>
@@ -793,4 +837,39 @@ export const Toast = styled.div<{ $tone: 'success' | 'error' }>`
   box-shadow: ${({ theme }) => theme.colors.elevatedShadow};
   font-size: 0.9rem;
   font-weight: 800;
+`;
+
+export const PairContextMenuSurface = styled.div<{ $x: number; $y: number }>`
+  position: fixed;
+  left: ${({ $x }) => `${$x}px`};
+  top: ${({ $y }) => `${$y}px`};
+  z-index: 40;
+  min-width: 150px;
+  border: 1px solid ${({ theme }) => theme.colors.tableBorder};
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: ${({ theme }) => theme.colors.elevatedShadow};
+  padding: 5px;
+`;
+
+export const PairContextMenuButton = styled.button`
+  width: 100%;
+  height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.dangerText};
+  padding: 0 10px;
+  text-align: left;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.dangerBackground};
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
 `;

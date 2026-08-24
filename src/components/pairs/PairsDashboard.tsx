@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  createPair,
+  deletePair as deletePairRequest,
   openBybitMarketPosition,
   reopenBybitMarketPosition,
   UnauthorizedError,
   type BybitMarketPositionSide,
   type CloseBybitMarketPositionResult,
+  type CreatePairInput,
 } from '../../api/pairs';
 import { subscribeToPushNotifications, updateAppBadge } from '../../api/push';
 import { usePairs } from '../../hooks/usePairs';
 import type { Pair } from '../../types/pair';
 import { GlobalStyle, Notice, Page, Toast } from './PairsDashboard.style';
 import { BuyPositionModal } from './BuyPositionModal';
+import { CreatePairModal } from './CreatePairModal';
+import { PairContextMenu } from './PairContextMenu';
 import { PairsTable } from './PairsTable';
 import { PairsToolbar } from './PairsToolbar';
 import { ReopenPositionModal } from './ReopenPositionModal';
@@ -42,6 +47,12 @@ interface BuyPositionRequest {
 interface ReopenPositionRequest {
   pair: Pair;
   side: BybitMarketPositionSide;
+}
+
+interface PairContextMenuState {
+  pair: Pair;
+  x: number;
+  y: number;
 }
 
 interface DashboardToast {
@@ -100,6 +111,10 @@ export function PairsDashboard({
     onlyNext: readStoredFilter('onlyNext'),
   });
   const [searchValue, setSearchValue] = useState('');
+  const [createPairModalOpen, setCreatePairModalOpen] = useState(false);
+  const [createPairLoading, setCreatePairLoading] = useState(false);
+  const [pairContextMenu, setPairContextMenu] = useState<PairContextMenuState | null>(null);
+  const [deletePairLoading, setDeletePairLoading] = useState(false);
   const [buyPositionRequest, setBuyPositionRequest] = useState<BuyPositionRequest | null>(null);
   const [buyAmount, setBuyAmount] = useState(5);
   const [buyLoading, setBuyLoading] = useState(false);
@@ -166,6 +181,80 @@ export function PairsDashboard({
 
       return nextFilters;
     });
+  };
+
+  const handleCreatePair = async (pair: CreatePairInput) => {
+    setCreatePairLoading(true);
+
+    try {
+      const createdPair = await createPair(pair, authToken);
+
+      setCreatePairModalOpen(false);
+      setToast({
+        message: `Пара ${createdPair.name} создана`,
+        tone: 'success',
+      });
+      await reload();
+    } catch (requestError) {
+      if (requestError instanceof UnauthorizedError) {
+        onLogout();
+        return;
+      }
+
+      setToast({
+        message: requestError instanceof Error ? requestError.message : 'Не удалось создать пару',
+        tone: 'error',
+      });
+    } finally {
+      setCreatePairLoading(false);
+    }
+  };
+
+  const handlePairContextMenu = (pair: Pair, x: number, y: number) => {
+    if (deletePairLoading) {
+      return;
+    }
+
+    const menuWidth = 160;
+    const menuHeight = 46;
+    const viewportPadding = 8;
+
+    setPairContextMenu({
+      pair,
+      x: Math.max(viewportPadding, Math.min(x, window.innerWidth - menuWidth - viewportPadding)),
+      y: Math.max(viewportPadding, Math.min(y, window.innerHeight - menuHeight - viewportPadding)),
+    });
+  };
+
+  const handleDeletePair = async () => {
+    if (!pairContextMenu) {
+      return;
+    }
+
+    const pair = pairContextMenu.pair;
+    setDeletePairLoading(true);
+
+    try {
+      await deletePairRequest(pair._id, authToken);
+      setPairContextMenu(null);
+      setToast({
+        message: `Пара ${pair.name} удалена`,
+        tone: 'success',
+      });
+      await reload();
+    } catch (requestError) {
+      if (requestError instanceof UnauthorizedError) {
+        onLogout();
+        return;
+      }
+
+      setToast({
+        message: requestError instanceof Error ? requestError.message : 'Не удалось удалить пару',
+        tone: 'error',
+      });
+    } finally {
+      setDeletePairLoading(false);
+    }
   };
 
   const handleBuySignalClick = (pair: Pair, side: BybitMarketPositionSide) => {
@@ -317,6 +406,7 @@ export function PairsDashboard({
           filters={filters}
           loading={loading}
           lastUpdated={lastUpdated}
+          onCreatePair={() => setCreatePairModalOpen(true)}
           onFilterToggle={toggleFilter}
           onRefresh={reload}
           onLogout={onLogout}
@@ -340,6 +430,7 @@ export function PairsDashboard({
           loading={loading}
           isTradeButtonCoolingDown={isTradeButtonCoolingDown}
           onBuySignalClick={handleBuySignalClick}
+          onPairContextMenu={handlePairContextMenu}
           onReopenSignalClick={handleReopenSignalClick}
           pairs={visiblePairs}
           totalPairs={pairs.length}
@@ -354,6 +445,14 @@ export function PairsDashboard({
             onAmountChange={handleBuyAmountChange}
             onClose={() => setBuyPositionRequest(null)}
             onConfirm={handleBuyPosition}
+          />
+        )}
+
+        {createPairModalOpen && (
+          <CreatePairModal
+            loading={createPairLoading}
+            onClose={() => setCreatePairModalOpen(false)}
+            onConfirm={handleCreatePair}
           />
         )}
 
@@ -372,6 +471,17 @@ export function PairsDashboard({
             onClose={() => setReopenPositionRequest(null)}
             onConfirm={handleReopenPosition}
             onShouldReopenChange={setShouldReopenAfterClose}
+          />
+        )}
+
+        {pairContextMenu && (
+          <PairContextMenu
+            loading={deletePairLoading}
+            pair={pairContextMenu.pair}
+            x={pairContextMenu.x}
+            y={pairContextMenu.y}
+            onClose={() => setPairContextMenu(null)}
+            onDelete={handleDeletePair}
           />
         )}
 

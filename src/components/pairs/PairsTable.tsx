@@ -18,6 +18,7 @@ interface PairsTableProps {
   ) => boolean;
   loading: boolean;
   onBuySignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
+  onPairContextMenu: (pair: Pair, x: number, y: number) => void;
   onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pairs: Pair[];
   totalPairs: number;
@@ -27,6 +28,7 @@ export function PairsTable({
   isTradeButtonCoolingDown,
   loading,
   onBuySignalClick,
+  onPairContextMenu,
   onReopenSignalClick,
   pairs,
   totalPairs,
@@ -63,6 +65,7 @@ export function PairsTable({
                 key={pair._id}
                 isTradeButtonCoolingDown={isTradeButtonCoolingDown}
                 onBuySignalClick={onBuySignalClick}
+                onContextMenu={onPairContextMenu}
                 onReopenSignalClick={onReopenSignalClick}
                 pair={pair}
               />

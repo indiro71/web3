@@ -42,6 +42,15 @@ interface OpenBybitMarketPositionParams {
   token: string;
 }
 
+export interface CreatePairInput {
+  contract: string;
+  exchange: string;
+  name: string;
+  order: number;
+  round: number;
+  symbol: string;
+}
+
 export interface OpenBybitMarketPositionResult {
   amount: number;
   leverage: number;
@@ -157,6 +166,46 @@ export async function fetchPairs(token: string): Promise<Pair[]> {
   }
 
   return sortPairs(data);
+}
+
+export async function createPair(pair: CreatePairInput, token: string): Promise<Pair> {
+  const response = await request(`${API_BASE_URL}/scanprices/pairs/`, {
+    body: JSON.stringify(pair),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+  const data = await readResponseBody(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError(data?.message);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || 'Failed to create pair');
+  }
+
+  return data;
+}
+
+export async function deletePair(pairId: string, token: string): Promise<void> {
+  const response = await request(`${API_BASE_URL}/scanprices/pairs/${pairId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'DELETE',
+  });
+  const data = await readResponseBody(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError(data?.message);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || 'Failed to delete pair');
+  }
 }
 
 export async function openBybitMarketPosition({
