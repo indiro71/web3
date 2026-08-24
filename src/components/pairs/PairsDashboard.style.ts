@@ -187,7 +187,7 @@ export const StatusDot = styled.span<{ $status: string }>`
   flex: 0 0 8px;
   border-radius: 50%;
   background: ${({ $status }) =>
-    $status === 'connected' ? '#10b981' : $status === 'connecting' ? '#f59e0b' : '#ef4444'};
+    $status === 'active' ? '#10b981' : $status === 'refreshing' ? '#f59e0b' : '#ef4444'};
 
   @media (max-width: 860px) {
     width: 9px;

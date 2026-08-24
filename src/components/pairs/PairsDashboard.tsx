@@ -90,7 +90,7 @@ export function PairsDashboard({
   onLogout,
   onThemeToggle,
 }: PairsDashboardProps) {
-  const { pairs, loading, error, reload, socketStatus, lastUpdated } = usePairs({
+  const { pairs, loading, error, reload, pollingStatus, lastUpdated } = usePairs({
     token: authToken,
     onUnauthorized: onLogout,
   });
@@ -323,7 +323,7 @@ export function PairsDashboard({
           onSearchChange={setSearchValue}
           onThemeToggle={onThemeToggle}
           searchValue={searchValue}
-          socketStatus={socketStatus}
+          pollingStatus={pollingStatus}
           themeMode={themeMode}
           totalCount={pairs.length}
           visibleCount={visiblePairs.length}

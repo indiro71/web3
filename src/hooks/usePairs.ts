@@ -1,16 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import io from 'socket.io-client';
-import {
-  fetchPairs,
-  mergePairUpdates,
-  PAIRS_SOCKET_URL,
-  PAIRS_UPDATED_EVENT,
-  SOCKET_IO_PATH,
-  UnauthorizedError,
-} from '../api/pairs';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { fetchPairs, UnauthorizedError } from '../api/pairs';
 import type { Pair } from '../types/pair';
 
-type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+type PollingStatus = 'refreshing' | 'active' | 'error';
+
+const pollingIntervalMs = 5000;
 
 interface UsePairsOptions {
   onUnauthorized: () => void;
@@ -21,17 +15,29 @@ export function usePairs({ onUnauthorized, token }: UsePairsOptions) {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [socketStatus, setSocketStatus] = useState<SocketStatus>('connecting');
+  const [pollingStatus, setPollingStatus] = useState<PollingStatus>('refreshing');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const requestInFlight = useRef(false);
 
-  const loadPairs = useCallback(async () => {
-    setLoading(true);
+  const refreshPairs = useCallback(async (showLoading: boolean) => {
+    if (requestInFlight.current) {
+      return;
+    }
+
+    requestInFlight.current = true;
+
+    if (showLoading) {
+      setLoading(true);
+    }
+
+    setPollingStatus('refreshing');
     setError('');
 
     try {
       const nextPairs = await fetchPairs(token);
       setPairs(nextPairs);
       setLastUpdated(new Date());
+      setPollingStatus('active');
     } catch (requestError) {
       if (requestError instanceof UnauthorizedError) {
         onUnauthorized();
@@ -39,64 +45,35 @@ export function usePairs({ onUnauthorized, token }: UsePairsOptions) {
       }
 
       setError(requestError instanceof Error ? requestError.message : 'Failed to load pairs');
+      setPollingStatus('error');
     } finally {
-      setLoading(false);
+      requestInFlight.current = false;
+
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, [onUnauthorized, token]);
 
-  useEffect(() => {
-    loadPairs();
-  }, [loadPairs]);
+  const loadPairs = useCallback(() => refreshPairs(true), [refreshPairs]);
 
   useEffect(() => {
-    const socket = io(PAIRS_SOCKET_URL, {
-      path: SOCKET_IO_PATH,
-      query: {
-        token,
-      },
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 5000,
-      reconnectionDelayMax: 30000,
-      timeout: 8000,
-      transports: ['websocket'],
-    });
-
-    const handleConnect = () => setSocketStatus('connected');
-    const handleDisconnect = () => setSocketStatus('disconnected');
-    const handleConnectError = () => setSocketStatus('error');
-    const handleReconnectFailed = () => setSocketStatus('error');
-    const handleAuthError = () => onUnauthorized();
-    const handlePairsUpdate = (updatedPairs: Pair[]) => {
-      setPairs((currentPairs) => mergePairUpdates(currentPairs, updatedPairs));
-      setLastUpdated(new Date());
-      setError('');
-    };
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('connect_error', handleConnectError);
-    socket.on('reconnect_failed', handleReconnectFailed);
-    socket.on('auth:error', handleAuthError);
-    socket.on(PAIRS_UPDATED_EVENT, handlePairsUpdate);
+    void refreshPairs(true);
+    const intervalId = window.setInterval(() => {
+      void refreshPairs(false);
+    }, pollingIntervalMs);
 
     return () => {
-      socket.removeListener('connect', handleConnect);
-      socket.removeListener('disconnect', handleDisconnect);
-      socket.removeListener('connect_error', handleConnectError);
-      socket.removeListener('reconnect_failed', handleReconnectFailed);
-      socket.removeListener('auth:error', handleAuthError);
-      socket.removeListener(PAIRS_UPDATED_EVENT, handlePairsUpdate);
-      socket.close();
+      window.clearInterval(intervalId);
     };
-  }, [onUnauthorized, token]);
+  }, [refreshPairs]);
 
   return {
     pairs,
     loading,
     error,
     reload: loadPairs,
-    socketStatus,
+    pollingStatus,
     lastUpdated,
   };
 }
