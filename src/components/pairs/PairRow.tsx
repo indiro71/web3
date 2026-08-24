@@ -24,7 +24,7 @@ import {
   hasNextLongSignal,
   hasNextShortSignal,
 } from './PairsDashboard.utils';
-import { CryptoIcon } from './CryptoIcon';
+import { CryptoIcon, type CryptoIconStatus } from './CryptoIcon';
 
 interface PairRowProps {
   isTradeButtonCoolingDown: (
@@ -36,6 +36,26 @@ interface PairRowProps {
   onReopenSignalClick: (pair: Pair, side: BybitMarketPositionSide) => void;
   pair: Pair;
 }
+
+const getPairUpdateStatus = (dateUpdate?: string): CryptoIconStatus => {
+  const updateTimestamp = dateUpdate ? new Date(dateUpdate).getTime() : Number.NaN;
+
+  if (!Number.isFinite(updateTimestamp)) {
+    return 'stale';
+  }
+
+  const updateAgeMs = Date.now() - updateTimestamp;
+
+  if (updateAgeMs <= 2 * 60 * 1000) {
+    return 'recent';
+  }
+
+  if (updateAgeMs <= 5 * 60 * 1000) {
+    return 'warning';
+  }
+
+  return 'stale';
+};
 
 export function PairRow({
   isTradeButtonCoolingDown,
@@ -49,6 +69,7 @@ export function PairRow({
   const shortNextSignal = hasNextShortSignal(pair);
   const longProfitSignal = hasProfitSignal(pair, 'long');
   const shortProfitSignal = hasProfitSignal(pair, 'short');
+  const updateStatus = getPairUpdateStatus(pair.dateUpdate);
   const canReopenLong =
     pair.exchange === 'BYBIT' &&
     longProfitSignal &&
@@ -70,7 +91,7 @@ export function PairRow({
     <tr>
       <NameCell>
         <NameContent>
-          <CryptoIcon pair={pair} />
+          <CryptoIcon pair={pair} updateStatus={updateStatus} />
           <ExchangeMark>{pair.exchange.charAt(0)}</ExchangeMark>
           <PairLink href={getExchangeUrl(pair)} target="_blank" rel="noreferrer">
             {pair.name}
