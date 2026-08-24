@@ -25,6 +25,7 @@ interface PairsToolbarProps {
   loading: boolean;
   lastUpdated: Date | null;
   onFilterToggle: (key: StoredFilterKey) => void;
+  onCreatePair: () => void;
   onLogout: () => void;
   onRefresh: () => void;
   onSearchChange: (value: string) => void;
@@ -47,6 +48,7 @@ export function PairsToolbar({
   loading,
   lastUpdated,
   onFilterToggle,
+  onCreatePair,
   onLogout,
   onRefresh,
   onSearchChange,
@@ -80,6 +82,10 @@ export function PairsToolbar({
             <FilterLabelShort>{filterItem.shortLabel}</FilterLabelShort>
           </FilterButton>
         ))}
+        <FilterButton type="button" $active={false} onClick={onCreatePair}>
+          <FilterLabelFull>+ Pair</FilterLabelFull>
+          <FilterLabelShort>+</FilterLabelShort>
+        </FilterButton>
       </FilterGroup>
       <Counter>
         {visibleCount} / {totalCount}
