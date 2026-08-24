@@ -58,6 +58,7 @@ export function PairsToolbar({
   visibleCount,
 }: PairsToolbarProps) {
   const updatedTime = lastUpdated?.toLocaleTimeString() ?? null;
+  const statusLabel = pollingStatus === 'error' ? 'error' : 'active';
 
   return (
     <TopBar aria-label="Pair filters">
@@ -86,7 +87,7 @@ export function PairsToolbar({
       <StatusStrip aria-label="Connection status">
         <StatusBadge $status={pollingStatus}>
           <StatusDot $status={pollingStatus} aria-hidden="true" />
-          <StatusLabel>{pollingStatus}</StatusLabel>
+          <StatusLabel>{statusLabel}</StatusLabel>
         </StatusBadge>
         <StatusMeta>
           <StatusMetaFull>{updatedTime ? `Updated ${updatedTime}` : 'No updates yet'}</StatusMetaFull>
