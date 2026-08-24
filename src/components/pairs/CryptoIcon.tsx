@@ -5,9 +5,12 @@ import { getCryptoIconSources, getPairBaseAsset } from './PairsDashboard.utils';
 
 interface CryptoIconProps {
   pair: Pair;
+  updateStatus: CryptoIconStatus;
 }
 
-export function CryptoIcon({ pair }: CryptoIconProps) {
+export type CryptoIconStatus = 'recent' | 'warning' | 'stale';
+
+export function CryptoIcon({ pair, updateStatus }: CryptoIconProps) {
   const asset = useMemo(() => getPairBaseAsset(pair), [pair.contract, pair.name, pair.symbol]);
   const iconSources = useMemo(() => getCryptoIconSources(asset), [asset]);
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -19,11 +22,16 @@ export function CryptoIcon({ pair }: CryptoIconProps) {
   }, [asset]);
 
   if (!source) {
-    return <CryptoFallback title={asset.toUpperCase()}>{label}</CryptoFallback>;
+    return (
+      <CryptoFallback $updateStatus={updateStatus} title={asset.toUpperCase()}>
+        {label}
+      </CryptoFallback>
+    );
   }
 
   return (
     <CryptoLogo
+      $updateStatus={updateStatus}
       src={source}
       alt={`${asset.toUpperCase()} icon`}
       loading="lazy"

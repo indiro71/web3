@@ -459,10 +459,16 @@ export const NameContent = styled.div`
   }
 `;
 
-export const CryptoLogo = styled.img`
+export const CryptoLogo = styled.img<{ $updateStatus: 'recent' | 'warning' | 'stale' }>`
   width: 26px;
   height: 26px;
   flex: 0 0 26px;
+  box-sizing: border-box;
+  border: 2px solid ${({ $updateStatus, theme }) => {
+    if ($updateStatus === 'recent') return theme.colors.positiveText;
+    if ($updateStatus === 'warning') return '#f59e0b';
+    return theme.colors.negativeText;
+  }};
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.surfaceSoft};
   object-fit: contain;
@@ -472,14 +478,19 @@ export const CryptoLogo = styled.img`
   }
 `;
 
-export const CryptoFallback = styled.span`
+export const CryptoFallback = styled.span<{ $updateStatus: 'recent' | 'warning' | 'stale' }>`
   width: 26px;
   height: 26px;
   flex: 0 0 26px;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid ${({ theme }) => theme.colors.tableBorder};
+  border: 2px solid ${({ $updateStatus, theme }) => {
+    if ($updateStatus === 'recent') return theme.colors.positiveText;
+    if ($updateStatus === 'warning') return '#f59e0b';
+    return theme.colors.negativeText;
+  }};
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.surfaceSoft};
   color: ${({ theme }) => theme.colors.secondaryText};
