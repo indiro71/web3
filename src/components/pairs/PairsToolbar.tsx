@@ -30,7 +30,7 @@ interface PairsToolbarProps {
   onSearchChange: (value: string) => void;
   onThemeToggle: () => void;
   searchValue: string;
-  socketStatus: string;
+  pollingStatus: string;
   themeMode: AppThemeMode;
   totalCount: number;
   visibleCount: number;
@@ -52,7 +52,7 @@ export function PairsToolbar({
   onSearchChange,
   onThemeToggle,
   searchValue,
-  socketStatus,
+  pollingStatus,
   themeMode,
   totalCount,
   visibleCount,
@@ -84,9 +84,9 @@ export function PairsToolbar({
         {visibleCount} / {totalCount}
       </Counter>
       <StatusStrip aria-label="Connection status">
-        <StatusBadge $status={socketStatus}>
-          <StatusDot $status={socketStatus} aria-hidden="true" />
-          <StatusLabel>{socketStatus}</StatusLabel>
+        <StatusBadge $status={pollingStatus}>
+          <StatusDot $status={pollingStatus} aria-hidden="true" />
+          <StatusLabel>{pollingStatus}</StatusLabel>
         </StatusBadge>
         <StatusMeta>
           <StatusMetaFull>{updatedTime ? `Updated ${updatedTime}` : 'No updates yet'}</StatusMetaFull>
