@@ -45,6 +45,7 @@ interface OpenBybitMarketPositionParams {
 export interface CreatePairInput {
   contract: string;
   exchange: string;
+  exchangeAccount: number;
   name: string;
   order: number;
   round: number;
