@@ -11,6 +11,7 @@ import {
 import { PairRow } from './PairRow';
 
 interface PairsTableProps {
+  crossAccountPairCounts: Map<number, number>;
   isTradeButtonCoolingDown: (
     pairId: string,
     action: 'buy' | 'reopen',
@@ -25,6 +26,7 @@ interface PairsTableProps {
 }
 
 export function PairsTable({
+  crossAccountPairCounts,
   isTradeButtonCoolingDown,
   loading,
   onBuySignalClick,
@@ -50,8 +52,8 @@ export function PairsTable({
               </th>
               <th>Price</th>
               <th>
-                <HeaderFull>L/S Liquidation</HeaderFull>
-                <HeaderShort>Liq</HeaderShort>
+                <HeaderFull>L/S Liquidation / MM</HeaderFull>
+                <HeaderShort>Liq/MM</HeaderShort>
               </th>
               <th>
                 <HeaderFull>L/S Margin</HeaderFull>
@@ -63,6 +65,9 @@ export function PairsTable({
             {pairs.map((pair) => (
               <PairRow
                 key={pair._id}
+                crossAccountPairCount={
+                  crossAccountPairCounts.get(Number(pair.exchangeAccount ?? 1)) ?? 0
+                }
                 isTradeButtonCoolingDown={isTradeButtonCoolingDown}
                 onBuySignalClick={onBuySignalClick}
                 onContextMenu={onPairContextMenu}

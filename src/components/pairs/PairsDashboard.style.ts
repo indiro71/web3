@@ -568,6 +568,7 @@ export const MetricValue = styled.span<{ $tone: string }>`
   color: ${({ $tone, theme }) => {
     if ($tone === 'positive') return theme.colors.positiveText;
     if ($tone === 'negative') return theme.colors.negativeText;
+    if ($tone === 'warning') return '#f59e0b';
     return theme.colors.mutedText;
   }};
 `;

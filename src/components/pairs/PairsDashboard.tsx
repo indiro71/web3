@@ -129,6 +129,23 @@ export function PairsDashboard({
     return filterPairs(pairs, filters, searchValue);
   }, [filters, pairs, searchValue]);
 
+  const crossAccountPairCounts = useMemo(() => {
+    return pairs.reduce((counts, pair) => {
+      if (
+        pair.isActive === false ||
+        pair.exchange !== 'BYBIT' ||
+        pair.marginMode !== 'CROSS'
+      ) {
+        return counts;
+      }
+
+      const exchangeAccount = Number(pair.exchangeAccount ?? 1);
+      counts.set(exchangeAccount, (counts.get(exchangeAccount) ?? 0) + 1);
+
+      return counts;
+    }, new Map<number, number>());
+  }, [pairs]);
+
   useEffect(() => {
     if (!toast) {
       return;
@@ -427,6 +444,7 @@ export function PairsDashboard({
         )}
 
         <PairsTable
+          crossAccountPairCounts={crossAccountPairCounts}
           loading={loading}
           isTradeButtonCoolingDown={isTradeButtonCoolingDown}
           onBuySignalClick={handleBuySignalClick}

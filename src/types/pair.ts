@@ -8,6 +8,7 @@ export interface Pair {
   contract: string;
   exchange: PairExchange;
   exchangeAccount?: number;
+  marginMode?: 'ISOLATED' | 'CROSS' | string;
   leverage?: number;
   currentPrice: number;
   sellPercent?: number;
@@ -21,12 +22,14 @@ export interface Pair {
   longPrice?: number;
   longMargin?: number;
   longAllMargin?: number;
+  longMaintenanceMargin?: number;
   longPercent?: number;
   shortMarginLimit?: number;
   longMarginLimit?: number;
   shortPrice?: number;
   shortMargin?: number;
   shortAllMargin?: number;
+  shortMaintenanceMargin?: number;
   shortPercent?: number;
   dateCreate?: string;
   dateUpdate?: string;
