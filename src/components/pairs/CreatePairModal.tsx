@@ -25,6 +25,7 @@ export function CreatePairModal({ loading, onClose, onConfirm }: CreatePairModal
   const [symbol, setSymbol] = useState('');
   const [contract, setContract] = useState('');
   const [exchange, setExchange] = useState('BYBIT');
+  const [exchangeAccount, setExchangeAccount] = useState(1);
   const [round, setRound] = useState(2);
   const [order, setOrder] = useState(1);
   const symbolWasEdited = useRef(false);
@@ -50,6 +51,7 @@ export function CreatePairModal({ loading, onClose, onConfirm }: CreatePairModal
     onConfirm({
       contract: contract.trim().toUpperCase(),
       exchange: exchange.trim().toUpperCase(),
+      exchangeAccount,
       name: name.trim(),
       order,
       round,
@@ -59,6 +61,8 @@ export function CreatePairModal({ loading, onClose, onConfirm }: CreatePairModal
 
   const formIsValid =
     Boolean(name.trim() && symbol.trim() && contract.trim() && exchange.trim()) &&
+    Number.isInteger(exchangeAccount) &&
+    exchangeAccount >= 1 &&
     Number.isInteger(round) &&
     round >= 0 &&
     Number.isInteger(order) &&
@@ -116,6 +120,19 @@ export function CreatePairModal({ loading, onClose, onConfirm }: CreatePairModal
             onChange={(event) => setExchange(event.target.value)}
             required
             value={exchange}
+          />
+        </ModalField>
+
+        <ModalField>
+          Exchange account
+          <ModalInput
+            disabled={loading}
+            min="1"
+            onChange={(event) => setExchangeAccount(event.target.valueAsNumber)}
+            required
+            step="1"
+            type="number"
+            value={exchangeAccount}
           />
         </ModalField>
 

@@ -7,6 +7,7 @@ export interface Pair {
   symbol: string;
   contract: string;
   exchange: PairExchange;
+  exchangeAccount?: number;
   leverage?: number;
   currentPrice: number;
   sellPercent?: number;

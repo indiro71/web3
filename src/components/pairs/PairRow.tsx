@@ -111,7 +111,7 @@ export function PairRow({
           <CryptoIcon pair={pair} updateStatus={updateStatus} />
           <ExchangeMark>{pair.exchange.charAt(0)}</ExchangeMark>
           <PairLink href={getExchangeUrl(pair)} target="_blank" rel="noreferrer">
-            {pair.name}
+            {pair.name} ({pair.exchangeAccount ?? 1})
           </PairLink>
         </NameContent>
       </NameCell>
