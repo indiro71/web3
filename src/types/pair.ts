@@ -23,6 +23,7 @@ export interface Pair {
   longMargin?: number;
   longAllMargin?: number;
   longMaintenanceMargin?: number;
+  longUnrealisedPnl?: number;
   longPercent?: number;
   shortMarginLimit?: number;
   longMarginLimit?: number;
@@ -30,6 +31,7 @@ export interface Pair {
   shortMargin?: number;
   shortAllMargin?: number;
   shortMaintenanceMargin?: number;
+  shortUnrealisedPnl?: number;
   shortPercent?: number;
   dateCreate?: string;
   dateUpdate?: string;
