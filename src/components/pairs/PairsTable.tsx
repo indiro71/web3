@@ -56,6 +56,10 @@ export function PairsTable({
                 <HeaderShort>Liq/MM</HeaderShort>
               </th>
               <th>
+                <HeaderFull>L/S PNL (All)</HeaderFull>
+                <HeaderShort>PNL All</HeaderShort>
+              </th>
+              <th>
                 <HeaderFull>L/S Margin</HeaderFull>
                 <HeaderShort>Margin</HeaderShort>
               </th>

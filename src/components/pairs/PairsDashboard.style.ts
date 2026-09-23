@@ -348,7 +348,7 @@ export const TableScroll = styled.div`
 
 export const PairsTableElement = styled.table`
   width: 100%;
-  min-width: 1040px;
+  min-width: 1180px;
   border-collapse: separate;
   border-spacing: 0;
   font-variant-numeric: tabular-nums;
@@ -402,7 +402,7 @@ export const PairsTableElement = styled.table`
   }
 
   @media (max-width: 860px) {
-    min-width: 720px;
+    min-width: 820px;
     font-size: 0.78rem;
 
     th,
@@ -416,7 +416,7 @@ export const PairsTableElement = styled.table`
   }
 
   @media (max-width: 560px) {
-    min-width: 650px;
+    min-width: 740px;
     font-size: 0.7rem;
 
     th,
