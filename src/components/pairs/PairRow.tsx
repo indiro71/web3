@@ -60,10 +60,13 @@ const getPairUpdateStatus = (dateUpdate?: string): CryptoIconStatus => {
 };
 
 const getCrossMmTone = (pair: Pair, accountPairCount: number) => {
-  const totalUnrealisedPnl =
-    Number(pair.longUnrealisedPnl ?? 0) + Number(pair.shortUnrealisedPnl ?? 0);
+  const totalPnl =
+    Number(pair.longUnrealisedPnl ?? 0) +
+    Number(pair.longRealisedPnl ?? 0) +
+    Number(pair.shortUnrealisedPnl ?? 0) +
+    Number(pair.shortRealisedPnl ?? 0);
 
-  if (totalUnrealisedPnl < -1000) {
+  if (totalPnl < -1000) {
     return 'negative';
   }
 
@@ -92,6 +95,8 @@ export function PairRow({
 }: PairRowProps) {
   const longMargin = formatMargin(pair.longMargin, pair.longAllMargin);
   const shortMargin = formatMargin(pair.shortMargin, pair.shortAllMargin);
+  const longPnl = Number(pair.longUnrealisedPnl ?? 0) + Number(pair.longRealisedPnl ?? 0);
+  const shortPnl = Number(pair.shortUnrealisedPnl ?? 0) + Number(pair.shortRealisedPnl ?? 0);
   const longNextSignal = hasNextLongSignal(pair);
   const shortNextSignal = hasNextShortSignal(pair);
   const longProfitSignal = hasProfitSignal(pair, 'long');
@@ -223,14 +228,14 @@ export function PairRow({
             $tone={isCrossMargin ? crossMmTone : getLiquidationTone(pair.longLiquidatePercent)}
           >
             {formatDecimal(pair.longLiquidatePercent, isCrossMargin ? 2 : 0)}{isCrossMargin && '%'}
-            {isCrossMargin && ` (${Math.round(pair.longUnrealisedPnl ?? 0)})`}
+            {isCrossMargin && ` (${Math.round(longPnl)})`}
           </MetricValue>
           <Divider>|</Divider>
           <MetricValue
             $tone={isCrossMargin ? crossMmTone : getLiquidationTone(pair.shortLiquidatePercent)}
           >
             {formatDecimal(pair.shortLiquidatePercent, isCrossMargin ? 2 : 0)}{isCrossMargin && '%'}
-            {isCrossMargin && ` (${Math.round(pair.shortUnrealisedPnl ?? 0)})`}
+            {isCrossMargin && ` (${Math.round(shortPnl)})`}
           </MetricValue>
         </PairValues>
       </td>
