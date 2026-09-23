@@ -97,6 +97,9 @@ export function PairRow({
   const shortMargin = formatMargin(pair.shortMargin, pair.shortAllMargin);
   const longPnl = Number(pair.longUnrealisedPnl ?? 0) + Number(pair.longRealisedPnl ?? 0);
   const shortPnl = Number(pair.shortUnrealisedPnl ?? 0) + Number(pair.shortRealisedPnl ?? 0);
+  const longCumulativePnl = Number(pair.longCumulativeRealisedPnl ?? 0);
+  const shortCumulativePnl = Number(pair.shortCumulativeRealisedPnl ?? 0);
+  const totalCumulativePnl = longCumulativePnl + shortCumulativePnl;
   const longNextSignal = hasNextLongSignal(pair);
   const shortNextSignal = hasNextShortSignal(pair);
   const longProfitSignal = hasProfitSignal(pair, 'long');
@@ -238,6 +241,24 @@ export function PairRow({
             {isCrossMargin && ` (${Math.round(shortPnl)})`}
           </MetricValue>
         </PairValues>
+      </td>
+      <td>
+        {pair.exchange === 'BYBIT' ? (
+          <PairValues>
+            <MetricValue $tone={getPercentTone(longCumulativePnl)}>
+              {Math.round(longCumulativePnl)}
+            </MetricValue>
+            <Divider>|</Divider>
+            <MetricValue $tone={getPercentTone(shortCumulativePnl)}>
+              {Math.round(shortCumulativePnl)}
+            </MetricValue>
+            <MetricValue $tone={getPercentTone(totalCumulativePnl)}>
+              ({Math.round(totalCumulativePnl)})
+            </MetricValue>
+          </PairValues>
+        ) : (
+          <MetricValue $tone="muted">—</MetricValue>
+        )}
       </td>
       <td>
         <PairValues>
