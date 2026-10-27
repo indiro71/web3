@@ -2,8 +2,6 @@ import type { BybitMarketPositionSide } from '../../api/pairs';
 import type { Pair } from '../../types/pair';
 import {
   Divider,
-  ExchangeMark,
-  ExtraMargin,
   MarginValue,
   MetricValue,
   NameCell,
@@ -144,7 +142,6 @@ export function PairRow({
       <NameCell>
         <NameContent>
           <CryptoIcon pair={pair} updateStatus={updateStatus} />
-          <ExchangeMark>{pair.exchange.charAt(0)}</ExchangeMark>
           <PairLink href={getExchangeUrl(pair)} target="_blank" rel="noreferrer">
             {pair.name} ({pair.exchangeAccount ?? 1})
           </PairLink>
@@ -264,12 +261,10 @@ export function PairRow({
         <PairValues>
           <MarginValue>
             {longMargin.base}
-            {longMargin.extra > 0 && <ExtraMargin>({longMargin.extra})</ExtraMargin>}
           </MarginValue>
           <Divider>|</Divider>
           <MarginValue>
             {shortMargin.base}
-            {shortMargin.extra > 0 && <ExtraMargin>({shortMargin.extra})</ExtraMargin>}
           </MarginValue>
         </PairValues>
       </td>

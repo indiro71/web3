@@ -502,27 +502,6 @@ export const CryptoFallback = styled.span<{ $updateStatus: 'recent' | 'warning' 
   }
 `;
 
-export const ExchangeMark = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.surfaceSoft};
-  color: ${({ theme }) => theme.colors.activeBackground};
-  font-size: 0.74rem;
-  font-weight: 900;
-
-  @media (max-width: 860px) {
-    width: 16px;
-    height: 16px;
-    flex-basis: 16px;
-    font-size: 0.58rem;
-  }
-`;
-
 export const PairLink = styled.a`
   color: ${({ theme }) => theme.colors.activeBackground};
   font-weight: 500;
@@ -619,17 +598,6 @@ export const StrongValue = styled.span`
 export const MarginValue = styled.span`
   color: ${({ theme }) => theme.colors.primaryText};
   font-weight: 500;
-`;
-
-export const ExtraMargin = styled.span`
-  margin-left: 3px;
-  color: ${({ theme }) => theme.colors.mutedText};
-  font-size: 0.78rem;
-
-  @media (max-width: 860px) {
-    margin-left: 1px;
-    font-size: 0.68rem;
-  }
 `;
 
 export const HeaderFull = styled.span`
