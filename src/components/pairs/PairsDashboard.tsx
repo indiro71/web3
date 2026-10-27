@@ -9,7 +9,8 @@ import {
   type CloseBybitMarketPositionResult,
   type CreatePairInput,
 } from '../../api/pairs';
-import { subscribeToPushNotifications, updateAppBadge } from '../../api/push';
+import { updateAppBadge } from '../../api/push';
+import { PushControls } from './PushControls';
 import { usePairs } from '../../hooks/usePairs';
 import type { Pair } from '../../types/pair';
 import { GlobalStyle, Notice, Page, Toast } from './PairsDashboard.style';
@@ -175,17 +176,6 @@ export function PairsDashboard({
 
     return () => window.clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    subscribeToPushNotifications(authToken).catch((pushError: unknown) => {
-      if (pushError instanceof UnauthorizedError) {
-        onLogout();
-        return;
-      }
-
-      console.error('Push subscription failed:', pushError);
-    });
-  }, [authToken, onLogout]);
 
   const toggleFilter = (key: StoredFilterKey) => {
     setFilters((previousFilters) => {
@@ -435,6 +425,8 @@ export function PairsDashboard({
           totalCount={pairs.length}
           visibleCount={visiblePairs.length}
         />
+
+        <PushControls token={authToken} onUnauthorized={onLogout} />
 
         {error && (
           <Notice role="alert">

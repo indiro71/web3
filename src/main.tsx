@@ -9,12 +9,14 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const registerWorker = () => {
+    void navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
       .catch((error: unknown) => {
         console.error('Service worker registration failed:', error);
       });
-  });
+  };
+  if (document.readyState === 'complete') registerWorker();
+  else window.addEventListener('load', registerWorker, { once: true });
 }

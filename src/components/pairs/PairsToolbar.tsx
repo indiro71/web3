@@ -60,7 +60,7 @@ export function PairsToolbar({
   visibleCount,
 }: PairsToolbarProps) {
   const updatedTime = lastUpdated?.toLocaleTimeString() ?? null;
-  const statusLabel = pollingStatus === 'error' ? 'error' : 'active';
+  const statusLabel = pollingStatus === 'offline' ? 'offline' : pollingStatus === 'error' ? 'stale' : pollingStatus;
 
   return (
     <TopBar aria-label="Pair filters">
