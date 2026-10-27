@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  getPushStatus,
   pushSupportError,
   restorePushSubscription,
   subscribeToPushNotifications,
-  testPush,
 } from '../../api/push';
 import { UnauthorizedError } from '../../api/pairs';
 import { RefreshButton } from './PairsDashboard.style';
@@ -30,11 +28,8 @@ export function PushControls({
   const [status, setStatus] = useState('Проверка уведомлений…');
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const subscription = useRef<PushSubscription | null>(null);
   const active = useRef(false);
   const inFlight = useRef(false);
-  const testId = useRef<string | null>(null);
   const supportError = pushSupportError();
 
   const failed = useCallback(
@@ -57,7 +52,7 @@ export function PushControls({
   useEffect(() => {
     active.current = true;
     const restore = async () => {
-      if (document.hidden || inFlight.current || testId.current) return;
+      if (document.hidden || inFlight.current) return;
       if (!navigator.onLine) {
         setConnected(false);
         setStatus('Нет сети — подключим уведомления после восстановления');
@@ -80,7 +75,6 @@ export function PushControls({
       try {
         const restored = await restorePushSubscription(token);
         if (active.current) {
-          subscription.current = restored;
           setConnected(Boolean(restored));
           setStatus(
             restored
@@ -117,79 +111,12 @@ export function PushControls({
     };
   }, [token, supportError, failed]);
 
-  useEffect(() => {
-    if (!testing) return;
-    let cancelled = false;
-    const started = Date.now();
-    const check = async () => {
-      if (!subscription.current || document.hidden) return;
-      if (Date.now() - started > 6 * 60_000) {
-        testId.current = null;
-        setTesting(false);
-        setStatus('Проверка завершена. Повторите тест');
-        return;
-      }
-      try {
-        const result = await getPushStatus(
-          token,
-          subscription.current,
-          testId.current || undefined,
-        );
-        if (cancelled) return;
-        const delivery = result.lastDelivery;
-        if (!result.subscribed) {
-          testId.current = null;
-          setTesting(false);
-          setConnected(false);
-          setStatus('Подписка удалена. Подключите уведомления заново');
-        } else if (delivery?.eventId === testId.current) {
-          if (delivery.state === 'accepted') {
-            testId.current = null;
-            setTesting(false);
-            setStatus(
-              'Push-сервис принял тест. Проверьте уведомление на устройстве',
-            );
-          } else if (
-            ['failed', 'expired', 'unsubscribed'].includes(delivery.state)
-          ) {
-            testId.current = null;
-            setTesting(false);
-            setStatus(
-              `Тест не отправлен (${
-                delivery.statusCode || delivery.state
-              }). Подключите уведомления заново`,
-            );
-          }
-        }
-      } catch (error) {
-        if (!cancelled) {
-          testId.current = null;
-          setTesting(false);
-          failed(error);
-        }
-      }
-    };
-    const timer = window.setInterval(() => {
-      void check();
-    }, 5000);
-    const resume = () => {
-      void check();
-    };
-    document.addEventListener('visibilitychange', resume);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', resume);
-    };
-  }, [testing, token, failed]);
-
   const enable = async () => {
     setBusy(true);
     try {
       // Call directly from the gesture; do not add an await before this call.
       const linked = await subscribeToPushNotifications(token);
       if (!active.current) return;
-      subscription.current = linked;
       setConnected(Boolean(linked));
       setStatus('Уведомления подключены');
     } catch (error) {
@@ -198,38 +125,18 @@ export function PushControls({
       if (active.current) setBusy(false);
     }
   };
-  const test = async () => {
-    if (!subscription.current) return;
-    setBusy(true);
-    try {
-      const result = await testPush(token, subscription.current);
-      if (!active.current) return;
-      testId.current = result.eventId;
-      setTesting(true);
-      setStatus(
-        'Тест поставлен в очередь: через 5 секунд — заблокируйте экран',
-      );
-    } catch (error) {
-      failed(error);
-    } finally {
-      if (active.current) setBusy(false);
-    }
-  };
+  if (connected) return null;
+
   return (
     <Controls aria-label="Уведомления">
       <span role="status">{status}</span>
-      {!supportError && (
+      {!supportError && Notification.permission !== 'granted' && (
         <RefreshButton
           type="button"
           onClick={enable}
-          disabled={busy || testing}
+          disabled={busy}
         >
-          {connected ? 'Переподключить' : 'Включить уведомления'}
-        </RefreshButton>
-      )}
-      {connected && (
-        <RefreshButton type="button" onClick={test} disabled={busy || testing}>
-          Тест push
+          Включить уведомления
         </RefreshButton>
       )}
     </Controls>
