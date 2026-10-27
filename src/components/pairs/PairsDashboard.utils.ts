@@ -7,8 +7,6 @@ const cryptoIconFallbackBaseUrl = 'https://cryptotokenimg.com/symbol';
 const quoteAssets = ['USDT', 'USDC', 'BUSD', 'USD', 'BTC', 'ETH', 'EUR', 'TRY', 'BRL'];
 const multiplierPrefixes = ['1000000', '100000', '10000', '1000'];
 
-export const liquidationPercent = 97;
-
 export type StoredFilterKey = 'allData' | 'onlyPrice' | 'onlyNext';
 export type PairFilters = Record<StoredFilterKey, boolean>;
 export const reopenPositionAmounts = [20, 25, 30, 35, 40, 45, 50];
@@ -206,18 +204,45 @@ export const getPercentTone = (value?: number) => {
   return value > 0 ? 'positive' : 'negative';
 };
 
-export const getLiquidationTone = (value?: number) => {
-  return (value ?? 0) > liquidationPercent ? 'negative' : 'positive';
+export const getCrossMmTone = (pair: Pair, accountPairCount: number) => {
+  const totalPnl =
+    Number(pair.longUnrealisedPnl ?? 0) +
+    Number(pair.longRealisedPnl ?? 0) +
+    Number(pair.shortUnrealisedPnl ?? 0) +
+    Number(pair.shortRealisedPnl ?? 0);
+
+  if (totalPnl < -1000) {
+    return 'negative';
+  }
+
+  if (accountPairCount <= 0) {
+    return 'positive';
+  }
+
+  const allocationPercent = 100 / accountPairCount;
+  const pairMmPercent =
+    Number(pair.longLiquidatePercent ?? 0) + Number(pair.shortLiquidatePercent ?? 0);
+
+  if (pairMmPercent > allocationPercent * 2) {
+    return 'negative';
+  }
+
+  return pairMmPercent >= allocationPercent ? 'warning' : 'positive';
 };
 
 export const filterPairs = (pairs: Pair[], filters: PairFilters, searchValue: string) => {
   const normalizedSearch = searchValue.trim().toLowerCase();
+  const crossAccountPairCounts = new Map<number, number>();
+  for (const pair of pairs) {
+    if (pair.isActive === false || pair.exchange !== 'BYBIT') continue;
+    const account = Number(pair.exchangeAccount ?? 1);
+    crossAccountPairCounts.set(account, (crossAccountPairCounts.get(account) ?? 0) + 1);
+  }
 
   return pairs.filter((pair) => {
-    const autoMargin = !pair.autoAddLongMargin || !pair.autoAddShortMargin;
-    const forAllData =
-      (pair.longLiquidatePercent ?? 0) > liquidationPercent ||
-      (pair.shortLiquidatePercent ?? 0) > liquidationPercent;
+    const forAllData = getCrossMmTone(
+      pair, crossAccountPairCounts.get(Number(pair.exchangeAccount ?? 1)) ?? 0,
+    ) !== 'positive';
     const forOnlyPrice = (pair.longPercent ?? 0) >= 13 || (pair.shortPercent ?? 0) >= 13;
     const forOnlyNext = hasNextLongSignal(pair) || hasNextShortSignal(pair);
 
@@ -232,19 +257,19 @@ export const filterPairs = (pairs: Pair[], filters: PairFilters, searchValue: st
     }
 
     if (filters.allData) {
-      return autoMargin || forAllData;
+      return forAllData;
     }
 
     if (filters.onlyPrice && filters.onlyNext) {
-      return autoMargin || forOnlyPrice || forOnlyNext;
+      return forOnlyPrice || forOnlyNext;
     }
 
     if (filters.onlyPrice) {
-      return autoMargin || forOnlyPrice;
+      return forOnlyPrice;
     }
 
     if (filters.onlyNext) {
-      return autoMargin || forOnlyNext;
+      return forOnlyNext;
     }
 
     return true;

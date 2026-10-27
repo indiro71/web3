@@ -76,6 +76,7 @@ export function PairsToolbar({
             key={filterItem.key}
             type="button"
             $active={filters[filterItem.key]}
+            aria-pressed={filters[filterItem.key]}
             onClick={() => onFilterToggle(filterItem.key)}
           >
             <FilterLabelFull>{filterItem.label}</FilterLabelFull>

@@ -16,7 +16,7 @@ import {
   formatMargin,
   formatPercent,
   getExchangeUrl,
-  getLiquidationTone,
+  getCrossMmTone,
   getPercentTone,
   hasProfitSignal,
   hasNextLongSignal,
@@ -57,32 +57,6 @@ const getPairUpdateStatus = (dateUpdate?: string): CryptoIconStatus => {
   return 'stale';
 };
 
-const getCrossMmTone = (pair: Pair, accountPairCount: number) => {
-  const totalPnl =
-    Number(pair.longUnrealisedPnl ?? 0) +
-    Number(pair.longRealisedPnl ?? 0) +
-    Number(pair.shortUnrealisedPnl ?? 0) +
-    Number(pair.shortRealisedPnl ?? 0);
-
-  if (totalPnl < -1000) {
-    return 'negative';
-  }
-
-  if (accountPairCount <= 0) {
-    return 'positive';
-  }
-
-  const allocationPercent = 100 / accountPairCount;
-  const pairMmPercent =
-    Number(pair.longLiquidatePercent ?? 0) + Number(pair.shortLiquidatePercent ?? 0);
-
-  if (pairMmPercent > allocationPercent * 2) {
-    return 'negative';
-  }
-
-  return pairMmPercent >= allocationPercent ? 'warning' : 'positive';
-};
-
 export function PairRow({
   crossAccountPairCount,
   isTradeButtonCoolingDown,
@@ -103,7 +77,6 @@ export function PairRow({
   const longProfitSignal = hasProfitSignal(pair, 'long');
   const shortProfitSignal = hasProfitSignal(pair, 'short');
   const updateStatus = getPairUpdateStatus(pair.dateUpdate);
-  const isCrossMargin = pair.exchange === 'BYBIT' && pair.marginMode === 'CROSS';
   const crossMmTone = getCrossMmTone(pair, crossAccountPairCount);
   const canReopenLong =
     pair.exchange === 'BYBIT' &&
@@ -225,17 +198,17 @@ export function PairRow({
       <td>
         <PairValues>
           <MetricValue
-            $tone={isCrossMargin ? crossMmTone : getLiquidationTone(pair.longLiquidatePercent)}
+            $tone={crossMmTone}
           >
-            {formatDecimal(pair.longLiquidatePercent, isCrossMargin ? 2 : 0)}{isCrossMargin && '%'}
-            {isCrossMargin && ` (${Math.round(longPnl)})`}
+            {formatDecimal(pair.longLiquidatePercent, 2)}%
+            {` (${Math.round(longPnl)})`}
           </MetricValue>
           <Divider>|</Divider>
           <MetricValue
-            $tone={isCrossMargin ? crossMmTone : getLiquidationTone(pair.shortLiquidatePercent)}
+            $tone={crossMmTone}
           >
-            {formatDecimal(pair.shortLiquidatePercent, isCrossMargin ? 2 : 0)}{isCrossMargin && '%'}
-            {isCrossMargin && ` (${Math.round(shortPnl)})`}
+            {formatDecimal(pair.shortLiquidatePercent, 2)}%
+            {` (${Math.round(shortPnl)})`}
           </MetricValue>
         </PairValues>
       </td>

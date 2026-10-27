@@ -134,8 +134,7 @@ export function PairsDashboard({
     return pairs.reduce((counts, pair) => {
       if (
         pair.isActive === false ||
-        pair.exchange !== 'BYBIT' ||
-        pair.marginMode !== 'CROSS'
+        pair.exchange !== 'BYBIT'
       ) {
         return counts;
       }
