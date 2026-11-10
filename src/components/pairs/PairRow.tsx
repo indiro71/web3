@@ -1,5 +1,5 @@
 import type { BybitMarketPositionSide } from '../../api/pairs';
-import type { Pair } from '../../types/pair';
+import type { Pair, PositionInsurance } from '../../types/pair';
 import {
   Divider,
   MarginValue,
@@ -17,8 +17,10 @@ import {
   formatPercent,
   getExchangeUrl,
   getCrossMmTone,
+  getNextBuyPrice,
   getPercentTone,
-  hasProfitSignal,
+  hasReopenAction,
+  canRefreshInsurance,
   hasNextLongSignal,
   hasNextShortSignal,
 } from './PairsDashboard.utils';
@@ -57,6 +59,18 @@ const getPairUpdateStatus = (dateUpdate?: string): CryptoIconStatus => {
   return 'stale';
 };
 
+function InsuranceMark({ insurance }: { insurance?: PositionInsurance }) {
+  if (!insurance) return null;
+  if (insurance.phase === 'active' || insurance.phase === 'cancelling') {
+    return <span title={`Застраховано · уровень ${insurance.triggerPrice}`}>©</span>;
+  }
+  if (insurance.blocking) return <span title="Сверяем операцию с Bybit">…</span>;
+  if (insurance.result && !insurance.result.success) {
+    return <span title={insurance.result.message} aria-label={insurance.result.message}>⚠</span>;
+  }
+  return null;
+}
+
 export function PairRow({
   crossAccountPairCount,
   isTradeButtonCoolingDown,
@@ -74,25 +88,25 @@ export function PairRow({
   const totalCumulativePnl = longCumulativePnl + shortCumulativePnl;
   const longNextSignal = hasNextLongSignal(pair);
   const shortNextSignal = hasNextShortSignal(pair);
-  const longProfitSignal = hasProfitSignal(pair, 'long');
-  const shortProfitSignal = hasProfitSignal(pair, 'short');
   const updateStatus = getPairUpdateStatus(pair.dateUpdate);
   const crossMmTone = getCrossMmTone(pair, crossAccountPairCount);
   const canReopenLong =
     pair.exchange === 'BYBIT' &&
-    longProfitSignal &&
+    hasReopenAction(pair, 'long') &&
     !isTradeButtonCoolingDown(pair._id, 'reopen', 'long');
   const canReopenShort =
     pair.exchange === 'BYBIT' &&
-    shortProfitSignal &&
+    hasReopenAction(pair, 'short') &&
     !isTradeButtonCoolingDown(pair._id, 'reopen', 'short');
   const canManuallyReopenLong =
     pair.exchange === 'BYBIT' &&
+    !pair.insurance?.long?.blocking &&
     Number(pair.longPercent) > 0 &&
     Number(pair.longMargin) > 0 &&
     !isTradeButtonCoolingDown(pair._id, 'reopen', 'long');
   const canManuallyReopenShort =
     pair.exchange === 'BYBIT' &&
+    !pair.insurance?.short?.blocking &&
     Number(pair.shortPercent) > 0 &&
     Number(pair.shortMargin) > 0 &&
     !isTradeButtonCoolingDown(pair._id, 'reopen', 'short');
@@ -126,6 +140,7 @@ export function PairRow({
             <NextSignalButton
               $tone="positive"
               type="button"
+              title={canRefreshInsurance(pair, 'long') ? 'Обновить страховку Long' : undefined}
               onClick={() => onReopenSignalClick(pair, 'long')}
             >
               {formatPercent(pair.longPercent)}
@@ -140,11 +155,13 @@ export function PairRow({
               {formatPercent(pair.longPercent)}
             </MetricValue>
           )}
+          <InsuranceMark insurance={pair.insurance?.long} />
           <Divider>|</Divider>
           {canReopenShort ? (
             <NextSignalButton
               $tone="positive"
               type="button"
+              title={canRefreshInsurance(pair, 'short') ? 'Обновить страховку Short' : undefined}
               onClick={() => onReopenSignalClick(pair, 'short')}
             >
               {formatPercent(pair.shortPercent)}
@@ -159,6 +176,7 @@ export function PairRow({
               {formatPercent(pair.shortPercent)}
             </MetricValue>
           )}
+          <InsuranceMark insurance={pair.insurance?.short} />
         </PairValues>
       </td>
       <td>
@@ -169,11 +187,11 @@ export function PairRow({
               type="button"
               onClick={() => onBuySignalClick(pair, 'long')}
             >
-              {formatDecimal(pair.nextBuyLongPrice)}
+              {formatDecimal(getNextBuyPrice(pair, 'long'))}
             </NextSignalButton>
           ) : (
             <MetricValue $tone={longNextSignal ? 'positive' : 'negative'}>
-              {formatDecimal(pair.nextBuyLongPrice)}
+              {formatDecimal(getNextBuyPrice(pair, 'long'))}
             </MetricValue>
           )}
           <Divider>|</Divider>
@@ -183,11 +201,11 @@ export function PairRow({
               type="button"
               onClick={() => onBuySignalClick(pair, 'short')}
             >
-              {formatDecimal(pair.nextBuyShortPrice)}
+              {formatDecimal(getNextBuyPrice(pair, 'short'))}
             </NextSignalButton>
           ) : (
             <MetricValue $tone={shortNextSignal ? 'positive' : 'negative'}>
-              {formatDecimal(pair.nextBuyShortPrice)}
+              {formatDecimal(getNextBuyPrice(pair, 'short'))}
             </MetricValue>
           )}
         </PairValues>

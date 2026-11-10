@@ -7,7 +7,8 @@ import { readFile } from 'node:fs/promises';
 const source = (await readFile(new URL('../src/components/pairs/PairsDashboard.utils.ts', import.meta.url), 'utf8'))
   .replace(/^import type .*;\n/gm, '').replace(/^export /gm, '');
 const context = {};
-vm.runInNewContext(stripTypeScriptTypes(source) + '\nglobalThis.filter = filterPairs;', context);
+vm.runInNewContext(stripTypeScriptTypes(source)
+  + '\nObject.assign(globalThis, { filter: filterPairs, canOfferInsurance, canRefreshInsurance, getNextBuyPrice });', context);
 const pair = (id, data = {}) => ({
   _id: id, name: id, symbol: `${id}USDT`, exchange: 'BYBIT', exchangeAccount: 1,
   marginMode: 'CROSS', isActive: true, currentPrice: 100, longMargin: 20, shortMargin: 20,
@@ -37,4 +38,34 @@ test('CROSS filtering does not depend on legacy margin-mode or auto-add flags', 
   assert.deepEqual(selected(rows, { allData: true }), ['risk']);
   assert.deepEqual(selected(rows, { onlyPrice: true }), []);
   assert.deepEqual(selected(rows, { onlyNext: true }), []);
+});
+
+test('insurance masks the opposite Next signal even with a stale price from the API', () => {
+  for (const [side, opposite, nextPrice] of [
+    ['long', 'short', { nextBuyShortPrice: 90 }],
+    ['short', 'long', { nextBuyLongPrice: 110 }],
+  ]) {
+    const row = pair(side, nextPrice);
+    assert.deepEqual(selected([row], { onlyNext: true }), [side]);
+    row.insurance = { [side]: { phase: 'active', blocking: true } };
+    assert.equal(context.getNextBuyPrice(row, opposite), 0);
+    assert.deepEqual(selected([row], { onlyNext: true }), []);
+    row.insurance[side] = { phase: 'finished', blocking: false };
+    assert.deepEqual(selected([row], { onlyNext: true }), [side]);
+  }
+});
+
+test('insurance uses strict margin, price and refresh thresholds', () => {
+  const row = pair('strict', { longMargin: 25, sellLongPrice: 95 });
+  assert.equal(context.canOfferInsurance(row, 'long'), false);
+  row.longMargin = 25.01;
+  assert.equal(context.canOfferInsurance(row, 'long'), true);
+  row.sellLongPrice = row.currentPrice;
+  assert.equal(context.canOfferInsurance(row, 'long'), false);
+
+  row.insurance = { long: { phase: 'active', blocking: true } };
+  row.longPercent = 50;
+  assert.equal(context.canRefreshInsurance(row, 'long'), false);
+  row.longPercent = 50.01;
+  assert.equal(context.canRefreshInsurance(row, 'long'), true);
 });

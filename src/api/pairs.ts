@@ -1,4 +1,4 @@
-import type { Pair } from '../types/pair';
+import type { Pair, PositionInsurance } from '../types/pair';
 
 const localApiBaseUrl = 'http://localhost:7272';
 const productionApiBaseUrl = 'https://indiro.ru/api-v2';
@@ -34,6 +34,12 @@ export const PAIRS_SOCKET_URL = `${SOCKET_BASE_URL}${PAIRS_SOCKET_NAMESPACE}`;
 export const PAIRS_UPDATED_EVENT = 'pairs:update';
 
 export type BybitMarketPositionSide = 'long' | 'short';
+
+export interface InsuranceQuote {
+  triggerPrice: string;
+  qty: string;
+  remainingMargin: number;
+}
 
 interface OpenBybitMarketPositionParams {
   amount: number;
@@ -277,6 +283,43 @@ export async function reopenBybitMarketPosition({
   }
 
   return data;
+}
+
+interface InsuranceRequest {
+  pairId: string;
+  side: BybitMarketPositionSide;
+  token: string;
+}
+
+async function requestInsurance<T>(
+  { pairId, side, token }: InsuranceRequest,
+  action: '' | '/preview' | '/refresh',
+  payload = {},
+): Promise<T> {
+  const response = await request(`${API_BASE_URL}/scanprices/pairs/${pairId}/bybit/insurance${action}`, {
+    body: JSON.stringify({ side, ...payload }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }, defaultTradeRequestTimeoutMs);
+  const data = await readResponseBody(response);
+  if (response.status === 401) throw new UnauthorizedError(data?.message);
+  if (!response.ok) throw new Error(data?.message || 'Не удалось выполнить операцию со страховкой');
+  return data;
+}
+
+export function previewInsurance(params: InsuranceRequest) {
+  return requestInsurance<InsuranceQuote>(params, '/preview');
+}
+
+export function armInsurance(params: InsuranceRequest, requestId: string, { qty, triggerPrice }: InsuranceQuote) {
+  return requestInsurance<PositionInsurance>(params, '', { requestId, qty, triggerPrice });
+}
+
+export function refreshInsurance(params: InsuranceRequest, insuranceId: string) {
+  return requestInsurance<PositionInsurance>(params, '/refresh', { insuranceId });
 }
 
 export function mergePairUpdates(currentPairs: Pair[], updatedPairs: Pair[]): Pair[] {

@@ -110,13 +110,37 @@ export const formatMargin = (base?: number, all?: number) => {
   };
 };
 
+export const getNextBuyPrice = (pair: Pair, side: BybitMarketPositionSide) =>
+  pair.insurance?.[side === 'long' ? 'short' : 'long']?.blocking
+    ? 0
+    : (side === 'long' ? pair.nextBuyLongPrice : pair.nextBuyShortPrice) ?? 0;
+
 export const hasNextLongSignal = (pair: Pair) => {
-  return Boolean(pair.nextBuyLongPrice && pair.currentPrice < pair.nextBuyLongPrice);
+  const price = getNextBuyPrice(pair, 'long');
+  return !pair.insurance?.long?.blocking && price > 0 && pair.currentPrice < price;
 };
 
 export const hasNextShortSignal = (pair: Pair) => {
-  return Boolean(pair.nextBuyShortPrice && pair.currentPrice > pair.nextBuyShortPrice);
+  const price = getNextBuyPrice(pair, 'short');
+  return !pair.insurance?.short?.blocking && price > 0 && pair.currentPrice > price;
 };
+
+export const canOfferInsurance = (pair: Pair, side: BybitMarketPositionSide) => {
+  if (pair.exchange !== 'BYBIT' || pair.isActive === false || pair.insurance?.[side]?.blocking) {
+    return false;
+  }
+  const margin = Number(side === 'long' ? pair.longMargin : pair.shortMargin);
+  const level = Number(side === 'long' ? pair.sellLongPrice : pair.sellShortPrice);
+  return margin > 25 && level > 0 && pair.currentPrice > 0
+    && (side === 'long' ? pair.currentPrice > level : pair.currentPrice < level);
+};
+
+export const canRefreshInsurance = (pair: Pair, side: BybitMarketPositionSide) =>
+  pair.isActive !== false && pair.insurance?.[side]?.phase === 'active'
+  && Number(side === 'long' ? pair.longPercent : pair.shortPercent) > 50;
+
+export const hasReopenAction = (pair: Pair, side: BybitMarketPositionSide) =>
+  pair.insurance?.[side]?.blocking ? canRefreshInsurance(pair, side) : hasProfitSignal(pair, side);
 
 export const hasProfitSignal = (pair: Pair, side: BybitMarketPositionSide) => {
   const currentPrice = Number(pair.currentPrice);
@@ -179,11 +203,11 @@ export const getActiveTradingButtonsCount = (
 
     let pairButtonsCount = 0;
 
-    if (hasProfitSignal(pair, 'long') && !isCoolingDown?.(pair._id, 'reopen', 'long')) {
+    if (hasReopenAction(pair, 'long') && !isCoolingDown?.(pair._id, 'reopen', 'long')) {
       pairButtonsCount += 1;
     }
 
-    if (hasProfitSignal(pair, 'short') && !isCoolingDown?.(pair._id, 'reopen', 'short')) {
+    if (hasReopenAction(pair, 'short') && !isCoolingDown?.(pair._id, 'reopen', 'short')) {
       pairButtonsCount += 1;
     }
 
