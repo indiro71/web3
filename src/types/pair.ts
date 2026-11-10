@@ -1,5 +1,19 @@
 export type PairExchange = 'MEXC' | 'BYBIT' | string;
 
+export interface PositionInsurance {
+  id: string;
+  phase: 'placing' | 'active' | 'cancelling' | 'closing' | 'reopening' | 'finished';
+  blocking: boolean;
+  triggerPrice: string;
+  result?: {
+    success: boolean;
+    message: string;
+    closedQty?: number;
+    restoredQty?: number;
+    remainingQty?: number;
+  };
+}
+
 export interface Pair {
   _id: string;
   isActive?: boolean;
@@ -63,4 +77,5 @@ export interface Pair {
   sellLongPriceWarning?: boolean;
   autoAddLongMargin?: boolean;
   autoAddShortMargin?: boolean;
+  insurance?: Partial<Record<'long' | 'short', PositionInsurance>>;
 }

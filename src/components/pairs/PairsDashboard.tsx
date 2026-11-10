@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  armInsurance,
   createPair,
   deletePair as deletePairRequest,
   openBybitMarketPosition,
+  previewInsurance,
+  refreshInsurance,
   reopenBybitMarketPosition,
   UnauthorizedError,
   type BybitMarketPositionSide,
   type CloseBybitMarketPositionResult,
   type CreatePairInput,
+  type InsuranceQuote,
 } from '../../api/pairs';
 import { updateAppBadge } from '../../api/push';
 import { PushControls } from './PushControls';
@@ -22,6 +26,7 @@ import { PairsToolbar } from './PairsToolbar';
 import { ReopenPositionModal } from './ReopenPositionModal';
 import type { AppThemeMode } from './PairsDashboard.theme';
 import {
+  canOfferInsurance,
   filterPairs,
   formatDecimal,
   getActiveTradingButtonsCount,
@@ -48,6 +53,7 @@ interface BuyPositionRequest {
 interface ReopenPositionRequest {
   pair: Pair;
   side: BybitMarketPositionSide;
+  insuranceRequestId: string;
 }
 
 interface PairContextMenuState {
@@ -122,9 +128,49 @@ export function PairsDashboard({
   const [reopenPositionRequest, setReopenPositionRequest] = useState<ReopenPositionRequest | null>(null);
   const [reopenAmount, setReopenAmount] = useState(20);
   const [shouldReopenAfterClose, setShouldReopenAfterClose] = useState(true);
+  const [insuranceSelected, setInsuranceSelected] = useState(false);
+  const [insuranceQuote, setInsuranceQuote] = useState<InsuranceQuote>();
+  const [insuranceQuoteError, setInsuranceQuoteError] = useState<string>();
+  const [pendingInsurance, setPendingInsurance] = useState<{
+    id: string;
+    pairId: string;
+    side: BybitMarketPositionSide;
+    action: 'arm' | 'refresh';
+  } | null>(null);
   const [reopenLoading, setReopenLoading] = useState(false);
   const [tradeCooldowns, setTradeCooldowns] = useState<TradeCooldowns>({});
   const [toast, setToast] = useState<DashboardToast | null>(null);
+
+  useEffect(() => {
+    if (!insuranceSelected || !reopenPositionRequest) return;
+    const { pair, side } = reopenPositionRequest;
+    let cancelled = false;
+    void previewInsurance({ pairId: pair._id, side, token: authToken }).then((quote) => {
+      if (!cancelled) setInsuranceQuote(quote);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      if (error instanceof UnauthorizedError) onLogout();
+      else setInsuranceQuoteError(error instanceof Error ? error.message : 'Не удалось рассчитать страховку');
+    });
+    return () => { cancelled = true; };
+  }, [authToken, insuranceSelected, onLogout, reopenPositionRequest]);
+
+  useEffect(() => {
+    if (!pendingInsurance) return;
+    const insurance = pairs.find((pair) => pair._id === pendingInsurance.pairId)
+      ?.insurance?.[pendingInsurance.side];
+    if (insurance?.id !== pendingInsurance.id) return;
+    if (insurance.phase === 'active' && pendingInsurance.action === 'arm') {
+      setToast({ message: 'Страховой ордер выставлен', tone: 'success' });
+      setPendingInsurance(null);
+    } else if (insurance.phase === 'finished' && insurance.result) {
+      setToast({
+        message: insurance.result.message,
+        tone: insurance.result.success ? 'success' : 'error',
+      });
+      setPendingInsurance(null);
+    }
+  }, [pairs, pendingInsurance]);
 
   const visiblePairs = useMemo(() => {
     return filterPairs(pairs, filters, searchValue);
@@ -287,7 +333,16 @@ export function PairsDashboard({
     setBuyPositionRequest(null);
     setReopenAmount(getDefaultReopenAmount(currentPositionAmount));
     setShouldReopenAfterClose(true);
-    setReopenPositionRequest({ pair, side });
+    handleInsuranceChange(false);
+    const requestId = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+      (byte) => byte.toString(16).padStart(2, '0')).join('');
+    setReopenPositionRequest({ pair, side, insuranceRequestId: requestId });
+  };
+
+  const handleInsuranceChange = (enabled: boolean) => {
+    setInsuranceSelected(enabled);
+    setInsuranceQuote(undefined);
+    setInsuranceQuoteError(undefined);
   };
 
   const handleReopenAmountChange = (amount: number) => {
@@ -355,6 +410,29 @@ export function PairsDashboard({
     setReopenLoading(true);
 
     try {
+      const { pair, side, insuranceRequestId } = reopenPositionRequest;
+      const insurance = pair.insurance?.[side];
+      const refreshing = insurance?.phase === 'active';
+      if (insuranceSelected || refreshing) {
+        const params = { pairId: pair._id, side, token: authToken };
+        const result = refreshing ? await refreshInsurance(params, insurance.id)
+          : insuranceQuote ? await armInsurance(params, insuranceRequestId, insuranceQuote) : undefined;
+        if (!result) return;
+        setReopenPositionRequest(null);
+        if (result.phase === 'finished' && result.result) {
+          setToast({ message: result.result.message, tone: result.result.success ? 'success' : 'error' });
+        } else if (!refreshing && result.phase === 'active') {
+          setToast({ message: 'Страховой ордер выставлен', tone: 'success' });
+        } else if (refreshing && result.phase === 'active') {
+          setToast({ message: 'Bybit сверяет статус ордера. Попробуйте обновить позже.', tone: 'error' });
+        } else {
+          setPendingInsurance({ id: result.id, pairId: pair._id, side, action: refreshing ? 'refresh' : 'arm' });
+          setToast({ message: 'Операция ожидает подтверждения Bybit', tone: 'success' });
+        }
+        await reload();
+        return;
+      }
+
       const result = await reopenBybitMarketPosition({
         amount: shouldReopenAfterClose ? reopenAmount : undefined,
         pairId: reopenPositionRequest.pair._id,
@@ -468,17 +546,23 @@ export function PairsDashboard({
         {reopenPositionRequest && (
           <ReopenPositionModal
             amount={reopenAmount}
+            canInsure={canOfferInsurance(reopenPositionRequest.pair, reopenPositionRequest.side)}
             currentPositionAmount={getPairPositionAmount(
               reopenPositionRequest.pair,
               reopenPositionRequest.side,
             )}
             loading={reopenLoading}
+            insuranceQuote={insuranceQuote}
+            insuranceQuoteError={insuranceQuoteError}
+            insuranceSelected={insuranceSelected}
             pair={reopenPositionRequest.pair}
+            refreshInsurance={reopenPositionRequest.pair.insurance?.[reopenPositionRequest.side]?.phase === 'active'}
             shouldReopen={shouldReopenAfterClose}
             side={reopenPositionRequest.side}
             onAmountChange={handleReopenAmountChange}
             onClose={() => setReopenPositionRequest(null)}
             onConfirm={handleReopenPosition}
+            onInsuranceChange={handleInsuranceChange}
             onShouldReopenChange={setShouldReopenAfterClose}
           />
         )}
